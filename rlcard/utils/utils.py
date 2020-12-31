@@ -242,7 +242,10 @@ def print_card(cards):
             lines[4].append('│    {}    │'.format(suit))
             lines[5].append('│         │')
             lines[6].append('│         │')
-            lines[7].append('│       {}{}│'.format(space, rank))
+            if len(elegent_card) == 3:
+                lines[7].append('│       {}{}│'.format(rank, space))
+            else:
+                lines[7].append('│        {}│'.format(rank))
             lines[8].append('└─────────┘')
 
     for line in lines:
