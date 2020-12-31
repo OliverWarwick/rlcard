@@ -75,7 +75,7 @@ There 4 actions in Limit Texas Hold'em. They are encoded as below.
 | 3           | Check         |
 
 ### Payoff of Limit Texas Hold'em
-The stardard unit used in the leterature is milli big blinds per hand (mbb/h). In the toolkit, the reward is calculated based on big blinds per hand. For example, a reward of 0.5 (-0.5) means that the player wins (loses) 0.5 times of the amount of big blind.
+The stardard unit used in the literature is milli big blinds per hand (mbb/h). In the toolkit, the reward is calculated based on big blinds per hand. For example, a reward of 0.5 (-0.5) means that the player wins (loses) 0.5 times of the amount of big blind.
 
 ## Dou Dizhu
 
@@ -112,7 +112,7 @@ In Dou Dizhu environment, we encode the state into 6 feature planes. The size of
 ### Action Abstraction of Dou Dizhu
 
 The size of the action space of Dou Dizhu is 27472. This number is too large for learning algorithms. Thus, we make abstractions to the original action space and obtain 309 actions. We note that some recent studies also use similar abstraction techniques. The main idea of the abstraction is to make the kicker fuzzy and only focus on the major part of the combination. For example, "33344" is abstracted as "333
-\*\*". When the predicted action of the agent is **not legal**, the agent will choose "**pass**.". Thus, the current environment is simple, since once the agent learns how to play legal actions, it can beat random agents. Users can also encode the actions for their own purposes (such as increasing the difficulty of the environment) by modifying `decode_action` function in [rlcard/envs/doudizhu.py](../rlcard/envs/doudizhu.py). Users are also encouraged to include rule-based agents as opponents. The abstractions in the environment are as below. The detailed  mapping of action and its ID is in [rlcard/games/doudizhu/jsondata/action_space.json](../rlcard/games/doudizhu/jsondata/action_space.json):
+\*\*". When the predicted action of the agent is **not legal**, the agent will choose "**pass**.". Thus, the current environment is simple, since once the agent learns how to play legal actions, it can beat random agents. Users can also encode the actions for their own purposes (such as increasing the difficulty of the environment) by modifying `decode_action` function in [rlcard/envs/doudizhu.py](../rlcard/envs/doudizhu.py). Users are also encouraged to include rule-based agents as opponents. The abstractions in the environment are as below. The detailed mapping of action and its ID is in [rlcard/games/doudizhu/jsondata/action_space.json](../rlcard/games/doudizhu/jsondata/action_space.json):
 
 | Type             | Number of Actions | Number of Actions after Abstraction | Action ID         |
 | ---------------- | :---------------: | :---------------------------------: | :---------------: |
@@ -127,7 +127,7 @@ The size of the action space of Dou Dizhu is 27472. This number is too large for
 | Plane with solo  |        21822      |        38                           | 200-237           |
 | Plane with pair  |        2939       |        30                           | 238-267           |
 | Quad with solo   |       1326        |        13                           | 268-280           |
-| Quad with pair   |       858        |        13                           | 281-293           |
+| Quad with pair   |       858         |        13                           | 281-293           |
 | Bomb             |        13         |        13                           | 294-306           |
 | Rocket           |         1         |         1                           | 307               |
 | Pass             |         1         |         1                           | 308               |

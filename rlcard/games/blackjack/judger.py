@@ -37,7 +37,7 @@ class BlackjackJudger(object):
                 player get higher score than dealer => game.winner[playerX] = 2
                 dealer get higher score than player => game.winner[playerX] = -1
                 game.winner[playerX] = 0 => the game is still ongoing
-                '''
+        '''
 
         if game.players[game_pointer].status == 'bust':
             game.winner['player' + str(game_pointer)] = -1
