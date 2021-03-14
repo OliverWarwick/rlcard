@@ -174,9 +174,8 @@ class Env(object):
 
         Returns:
             (tuple) Tuple containing:
-
-                (list): A list of trajectories generated from the environment.
-                (list): A list payoffs. Each entry corresponds to one player.
+            (list): A list of trajectories generated from the environment.
+            (list): A list payoffs. Each entry corresponds to one player.
 
         Note: The trajectories are 3-dimension list. The first dimension is for different players.
               The second dimension is for different transitions. The third dimension is for the contents of each transiton

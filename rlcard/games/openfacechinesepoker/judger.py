@@ -1,26 +1,25 @@
-
-class BlackjackJudger(object):
+class OpenFaceJudger(object):
     def __init__(self, np_random):
         ''' Initialize a BlackJack judger class
         '''
         self.np_random = np_random
         self.rank2score = {"A":11, "2":2, "3":3, "4":4, "5":5, "6":6, "7":7, "8":8, "9":9, "T":10, "J":10, "Q":10, "K":10}
 
-    def judge_round(self, player):
-        ''' Judge the target player's status
+    def judge_bust(self, player) -> (bool, str):
+        ''' 
+        Judge the whether the player is bust or not.
+        A player is bust when either their middle  row and is stronger than their front row, or their back row is stronger than their middle row.
 
         Args:
             player (int): target player's id
 
         Returns:
-            status (str): the status of the target player
-            score (int): the current score of the player
+            bust (bool): whether of not player is bust
+            reason (str): 
         '''
-        score = self.judge_score(player.hand)
-        if score <= 21:
-            return "alive", score
-        else:
-            return "bust", score
+        pass
+        # TODO: Add in logic to test if a player is bust.
+
 
     def judge_game(self, game, game_pointer):
         ''' Judge the winner of the game
@@ -29,13 +28,14 @@ class BlackjackJudger(object):
             game (class): target game class
         '''
         '''
-            game.winner['dealer'] doesn't need anymore if we change code like this
-            player bust (whether dealer bust or not) => game.winner[playerX] = -1
-            player and dealer tie => game.winner[playerX] = 1
-            dealer bust and player not bust => game.winner[playerX] = 2
-            player get higher score than dealer => game.winner[playerX] = 2
-            dealer get higher score than player => game.winner[playerX] = -1
-            game.winner[playerX] = 0 => the game is still ongoing
+                game.winner['dealer'] doesn't need anymore if we change code like this
+
+                player bust (whether dealer bust or not) => game.winner[playerX] = -1
+                player and dealer tie => game.winner[playerX] = 1
+                dealer bust and player not bust => game.winner[playerX] = 2
+                player get higher score than dealer => game.winner[playerX] = 2
+                dealer get higher score than player => game.winner[playerX] = -1
+                game.winner[playerX] = 0 => the game is still ongoing
         '''
 
         if game.players[game_pointer].status == 'bust':

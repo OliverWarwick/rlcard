@@ -45,6 +45,15 @@ class Card(object):
         '''
         return self.rank + self.suit
 
+    def __repr__(self):
+        ''' Returns a printable representation of the object, which can be used for printing these as part of a list
+
+        Returns: 
+            string: e.g: AS, 5H etc...
+        '''
+
+        return self.__str__()
+
     def get_index(self):
         ''' Get index of a card.
 
