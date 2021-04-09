@@ -22,10 +22,14 @@ human_agent = HumanAgent(env.action_num)
 random_agent = RandomAgent(env.action_num)
 env.set_agents([human_agent, random_agent])
 
+running_totals = []
+num_round = 0
+
 print(">> Nano OFCP human agent")
 
 while True:
     print(">> Start a new game")
+    num_round += 1
 
     trajectories, payoffs = env.run(is_training=False)
     # If the human does not take the final action, we need to
@@ -72,9 +76,20 @@ while True:
 
     # In OFCP there are only one payoff which comes at the end, so payoff will only have 1 value..
     for i in range(player_num):
+        # Add to the running totals.
+        running_totals[i] += payoffs[i]
         print("Payoff for player {}: {}".format(i, payoffs[i]))
         print('')
 
-    response = input("Press q to quit, or any key to coniinue: ")
+    response = input("Press q to quit, or any key to continue: ")
     if response.startswith('q'):
         break
+
+# Output the final scores.
+print('\n===============   FINAL SCORES  ===============\n')
+for i in range(player_num):
+        # Add to the running totals.
+        print("Player {}".format(i))
+        print("Final score: {}".format(payoffs[i]))
+        print("Avg number of points per round: {}".format(payoffs[i] / num_round))
+        print('')
