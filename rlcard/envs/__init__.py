@@ -48,3 +48,8 @@ register(
     env_id='gin-rummy',
     entry_point='rlcard.envs.gin_rummy:GinRummyEnv',
 )
+
+register(
+    env_id='nano_ofcp', 
+    entry_point='rlcard.envs.nano_ofcp:NanoOFCPEnv',
+)

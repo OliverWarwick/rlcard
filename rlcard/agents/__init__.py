@@ -24,3 +24,4 @@ from rlcard.agents.leduc_holdem_human_agent import HumanAgent as LeducholdemHuma
 from rlcard.agents.blackjack_human_agent import HumanAgent as BlackjackHumanAgent
 from rlcard.agents.random_agent import RandomAgent
 from rlcard.agents.uno_human_agent import HumanAgent as UnoHumanAgent
+from rlcard.agents.nano_ofcp_human_agent import HumanAgent as NanoOFCPHumanAgent

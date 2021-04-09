@@ -27,6 +27,20 @@ def init_54_deck():
     res.append(Card('RJ', ''))
     return res
 
+# OW - ADDITION.
+def init_mini_deck():
+    '''
+    Initialize a mini deck of 20 cards featuring 10 -> A of each suit.
+    Used in Nano_OFCP.
+
+    Returns:
+        (list): A list of Card objets.
+    '''
+    suit_list = ['S', 'H', 'D', 'C']
+    rank_list = ['T', 'J', 'Q', 'K', 'A']
+
+    return [Card(suit, rank) for suit in suit_list for rank in rank_list]
+
 
 def get_random_cards(cards, num, np_random=None):
     ''' Randomly get a number of chosen cards out of a list of cards
@@ -62,13 +76,10 @@ def is_pair(cards):
     Returns:
         (boolean): True if the list is a pair
     '''
-    if len(cards) == 2 and cards[0].rank == cards[1].rank:
-        return True
-    else:
-        return False
+    return len(cards) == 2 and cards[0].rank == cards[1].rank
 
 def is_single(cards):
-    ''' Check whether the card is singel
+    ''' Check whether the card is single
 
     Args:
         cards (list): A list of Card object
@@ -76,10 +87,7 @@ def is_single(cards):
     Returns:
         (boolean): True if the list is single
     '''
-    if len(cards) == 1:
-        return True
-    else:
-        return False
+    return len(cards) == 1
 
 def rank2int(rank):
     ''' Get the coresponding number of a rank.
@@ -113,6 +121,20 @@ def rank2int(rank):
         return 13
     return None
 
+def suit2int(suit):
+    """ Helper function for order cards as no current ordering over them. The integers which are used are arbitrary they just define
+    one possible ordeirng over the suits.
+
+    Args:
+        suit (str): From Card.suits
+    
+    Returns:
+        (int): the number corresponding to the suit, if suit invalid then zero.
+    """
+
+    ordering = {'S': 1, 'H': 2, 'D': 3, 'C': 4}
+    return ordering.get(suit, 0)
+
 def get_cards_from_ranks(player, ranks):
     ''' Get chosen cards and remained cards from a player's hand according to input rank list
 
@@ -121,7 +143,7 @@ def get_cards_from_ranks(player, ranks):
         ranks (list): A list of rank (string)
 
     Returns:
-        (tupel): Tuple containing:
+        (tuple): Tuple containing:
             (list): A list of Card objects, chosen cards
             (list): A list of Card objects, remained cards
 
@@ -389,9 +411,12 @@ def tournament(env, num):
         A list of avrage payoffs for each player
     '''
     payoffs = [0 for _ in range(env.player_num)]
+    # print("Payoffs: {}".format(payoffs))
     counter = 0
     while counter < num:
         _, _payoffs = env.run(is_training=False)
+        # print("_payoffs from env: {}".format(_payoffs))
+        # print("Type of _payoffs: {}".format(type(_payoffs)))
         if isinstance(_payoffs, list):
             for _p in _payoffs:
                 for i, _ in enumerate(payoffs):

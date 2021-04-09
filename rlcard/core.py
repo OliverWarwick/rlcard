@@ -1,5 +1,9 @@
+# from rlcard.utils.utils import rank2int, suit2int
 ''' Game-related and Env-related base classes
 '''
+RANK_TO_STRING = {2: "2", 3: "3", 4: "4", 5: "5", 6: "6",
+                               7: "7", 8: "8", 9: "9", 10: "T", 11: "J", 12: "Q", 13: "K", 14: "A"}
+STRING_TO_RANK = {v:k for k, v in RANK_TO_STRING.items()}
 
 class Card(object):
     '''
@@ -31,6 +35,14 @@ class Card(object):
         else:
             # don't attempt to compare against unrelated types
             return NotImplemented
+        
+    def __lt__(self, other):
+        # Use the natural order over the ranks and then use the letter ordering over the suits 
+        # arbitrary we could picked any order for either.
+        if self.rank == other.rank:
+            return self.suit < other.suit
+        else:
+            return STRING_TO_RANK.get(self.rank) < STRING_TO_RANK.get(self.rank)
 
     def __hash__(self):
         suit_index = Card.valid_suit.index(self.suit)
