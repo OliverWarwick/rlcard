@@ -75,4 +75,6 @@ while True:
         print("Payoff for player {}: {}".format(i, payoffs[i]))
         print('')
 
-    input("Press any key to continue...")
+    response = input("Press q to quit, or any key to coniinue: ")
+    if response.startswith('q'):
+        break
