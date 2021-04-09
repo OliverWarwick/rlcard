@@ -22,7 +22,7 @@ human_agent = HumanAgent(env.action_num)
 random_agent = RandomAgent(env.action_num)
 env.set_agents([human_agent, random_agent])
 
-running_totals = []
+running_totals = [0, 0]
 num_round = 0
 
 print(">> Nano OFCP human agent")
@@ -77,7 +77,7 @@ while True:
     # In OFCP there are only one payoff which comes at the end, so payoff will only have 1 value..
     for i in range(player_num):
         # Add to the running totals.
-        running_totals[i] += payoffs[i]
+        running_totals[i] = running_totals[i] + payoffs[i]
         print("Payoff for player {}: {}".format(i, payoffs[i]))
         print('')
 
