@@ -25,7 +25,7 @@ def training_run(evaluate_every = 1000,
     if log_dir is None:
         log_dir = './experiments/nano_ofcp_dqn_result/'
     if not os.path.exists(log_dir):
-            os.makedirs(log_dir)
+        os.makedirs(log_dir)
 
     # Set up the model saving folder.
     if save_dir is None:
@@ -72,6 +72,7 @@ def training_run(evaluate_every = 1000,
             tour_score = tournament(eval_env, evaluate_num)[0]
             if tour_score > best_score:
                 state_dict = agent.get_state_dict()
+                print(os.path.join(save_dir, 'best_model.pth'))
                 torch.save(state_dict, os.path.join(save_dir, 'best_model.pth'))
                 best_score = tour_score
                 logger.log(str(env.timestep) + "  Saving best model. Accuracy: " + str(best_score))
