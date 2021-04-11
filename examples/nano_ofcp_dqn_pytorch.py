@@ -9,14 +9,22 @@ from rlcard.agents import RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
 
+# def main(evaluate_every = 100, 
+# evaluate_num = 1000, 
+# episode_num = 10000, 
+# memory_init_size = 1000, 
+# train_every = 1, 
+# log_dir = './experiments/nano_ofcp_dqn_result/',
+# save_dir = 'models/nano_dqn_pytorch'):
+
 # Make environment
 env = rlcard.make('nano_ofcp', config={'seed': 0})
 eval_env = rlcard.make('nano_ofcp', config={'seed': 0})
 
-# Set the iterations numbers and how frequently we evaluate the performance
-evaluate_every = 100
-evaluate_num = 1000
-episode_num = 10000
+# # Set the iterations numbers and how frequently we evaluate the performance
+evaluate_every = 1000
+evaluate_num = 2000
+episode_num = 3000
 
 # The intial memory size
 memory_init_size = 1000
@@ -25,7 +33,13 @@ memory_init_size = 1000
 train_every = 1
 
 # The paths for saving the logs and learning curves
-log_dir = './experiments/limit_holdem_dqn_result/'
+log_dir = './experiments/nano_ofcp_dqn_result/'
+
+# Set up the model saving folder.
+best_score = 0
+save_dir = 'models/nano_dqn_pytorch'
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
 
 # Set a global seed
 set_global_seed(0)
@@ -46,8 +60,8 @@ eval_env.set_agents([agent, random_agent])
 logger = Logger(log_dir)
 
 # Display infomation about the agents networks.
-print("Agents network shape: {}".format(agent.q_estimator.qnet))
-print("Agents network layers: {}".format(agent.q_estimator.qnet.fc_layers))
+# print("Agents network shape: {}".format(agent.q_estimator.qnet))
+# print("Agents network layers: {}".format(agent.q_estimator.qnet.fc_layers))
 
 for episode in range(episode_num):
 
@@ -60,6 +74,14 @@ for episode in range(episode_num):
 
     # Evaluate the performance. Play with random agents.
     if episode % evaluate_every == 0:
+        
+        tour_score = tournament(eval_env, evaluate_num)[0]
+        if tour_score > best_score:
+            state_dict = agent.get_state_dict()
+            torch.save(state_dict, os.path.join(save_dir, 'best_model.pth'))
+            best_score = tour_score
+            logger.log(str(env.timestep) + "  Saving best model. Accuracy: " + str(best_score))
+
         logger.log_performance(env.timestep, tournament(eval_env, evaluate_num)[0])
 
 # Close files in the logger
@@ -69,9 +91,7 @@ logger.close_files()
 logger.plot('DQN')
 
 # Save model
-save_dir = 'models/nano_dqn_pytorch'
-if not os.path.exists(save_dir):
-    os.makedirs(save_dir)
+
 state_dict = agent.get_state_dict()
 print(state_dict.keys())
 torch.save(state_dict, os.path.join(save_dir, 'model.pth'))
