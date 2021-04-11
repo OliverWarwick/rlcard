@@ -24,13 +24,14 @@ def training_run(evaluate_every = 1000,
     # The paths for saving the logs and learning curves
     if log_dir is None:
         log_dir = './experiments/nano_ofcp_dqn_result/'
+    if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
 
     # Set up the model saving folder.
-    best_score = 0
     if save_dir is None:
         save_dir = 'models/nano_dqn_pytorch'
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
 
     # Set a global seed
     set_global_seed(0)
@@ -53,6 +54,8 @@ def training_run(evaluate_every = 1000,
     # Display infomation about the agents networks.
     # print("Agents network shape: {}".format(agent.q_estimator.qnet))
     # print("Agents network layers: {}".format(agent.q_estimator.qnet.fc_layers))
+
+    best_score = 0
 
     for episode in range(episode_num):
 
