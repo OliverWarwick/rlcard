@@ -56,25 +56,37 @@ class CFRAgent():
         if self.env.is_over():
             return self.env.get_payoffs()
 
+        print(self.env.get_perfect_information())
+
         current_player = self.env.get_player_id()
+        # print("Current Player: {}".format(current_player))
 
         action_utilities = {}
         state_utility = np.zeros(self.env.player_num)
-        obs, legal_actions = self.get_state(current_player)
+        obs, legal_actions, raw_obs = self.get_state(current_player)
         action_probs = self.action_probs(obs, legal_actions, self.policy)
+        # print("Raw Obs: {}".format(raw_obs))
+        # print("Legal Actions: {}".format(legal_actions))
+        # print("Action Probs: {}".format(action_probs))
 
         for action in legal_actions:
             action_prob = action_probs[action]
             new_probs = probs.copy()
             new_probs[current_player] *= action_prob
 
+            # print("Traversing to new state using action: {}".format(action))
             # Keep traversing the child state
+            # print("Steping forwards")
             self.env.step(action)
             utility = self.traverse_tree(new_probs, player_id)
             self.env.step_back()
+            # print("Stepped backwards")
 
             state_utility += action_prob * utility
             action_utilities[action] = utility
+
+            # print("Action utilities: {}".format(action_utilities))
+            # print("Finished transversing from action: {}".format(action))
 
         if not current_player == player_id:
             return state_utility
@@ -84,6 +96,8 @@ class CFRAgent():
         counterfactual_prob = (np.prod(probs[:current_player]) *
                                 np.prod(probs[current_player + 1:]))
         player_state_utility = state_utility[current_player]
+
+        # print("Player Prob: {}. CF Prob: {}. State Util: {}".format(player_prob, counterfactual_prob, player_state_utility))
 
         if obs not in self.regrets:
             self.regrets[obs] = np.zeros(self.env.action_num)
@@ -95,6 +109,7 @@ class CFRAgent():
                     - player_state_utility)
             self.regrets[obs][action] += regret
             self.average_policy[obs][action] += self.iteration * player_prob * action_prob
+            # print("Raw Obs: {}. Action: {}. Iteration Regret: {}. Overall Regret: {}".format(raw_obs, action, regret, self.regrets[obs][action]))
         return state_utility
 
     def update_policy(self):
@@ -168,7 +183,7 @@ class CFRAgent():
                 legal_actions (list): Indices of legal actions
         '''
         state = self.env.get_state(player_id)
-        return state['obs'].tostring(), state['legal_actions']
+        return state['obs'].tostring(), state['legal_actions'], state['obs']
 
     def save(self):
         ''' Save model
@@ -197,6 +212,8 @@ class CFRAgent():
         '''
         if not os.path.exists(self.model_path):
             return
+
+        print("Loading model")
 
         policy_file = open(os.path.join(self.model_path, 'policy.pkl'),'rb')
         self.policy = pickle.load(policy_file)

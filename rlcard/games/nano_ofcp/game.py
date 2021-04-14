@@ -5,6 +5,7 @@ from rlcard.games.nano_ofcp import Round
 
 from copy import deepcopy
 import numpy as np
+import random
 
 class Nano_OFCP_Game(object):
 
@@ -15,6 +16,7 @@ class Nano_OFCP_Game(object):
         self.np_random = np.random.RandomState()
         self.num_players = 2
         self.action_num = 12
+        self.player_to_lead = None
 
     def configure(self, game_config):
         ''' Specifiy some game specific parameters, such as player number
@@ -26,14 +28,18 @@ class Nano_OFCP_Game(object):
         self.players = [Player(0, self.np_random), Player(1, self.np_random)]
         self.judger = Judger(self.np_random)
 
-        # TODO: Fix game pointer so this can be passed in so we can alterante the first player.
-        self.game_pointer = 0
+        # Player to play first should alternate between the players in order to not give
+        # an advantaged to over the other.
+        if self.player_to_lead is None:
+            self.player_to_lead = random.randint(0,2)
+        else:
+            self.player_to_lead = (self.player_to_lead + 1) % self.num_players
+
+        self.game_pointer = self.player_to_lead
         self.history = []
         self.round = Round(num_players=self.num_players,
                            np_random=self.np_random)
         self.round.start_new_round(self.game_pointer)
-
-        
 
         # Deal the initial cards, and add one to the dealer count.
         for i in range(self.num_players):
@@ -50,11 +56,14 @@ class Nano_OFCP_Game(object):
         """
 
         if self.allow_step_back:
-            g_p = self.game_pointer
-            d_c = self.deal_counter
+            g_p = deepcopy(self.game_pointer)
+            l_p = deepcopy(self.player_to_lead)
+            d_c = deepcopy(self.dealer.deal_counter)
+            j = deepcopy(self.judger)
+            d = deepcopy(self.dealer)
             p = deepcopy(self.players)
             r = deepcopy(self.round)
-            self.history.append((p, r, g_p, d_c))
+            self.history.append((p, r, d, j, g_p, l_p, d_c))
 
         # Step the round forward.
         self.game_pointer = self.round.proceed_round(self.players, action)
@@ -80,7 +89,7 @@ class Nano_OFCP_Game(object):
             (bool): True if the game steps back successfully
         '''
         if len(self.history) > 0:
-            self.players, self.round, self.game_pointer, self.deal_counter = self.history.pop() 
+            self.players, self.round, self.dealer, self.judger, self.game_pointer, self.player_to_lead, self.deal_counter = self.history.pop() 
             return True
         return False
 

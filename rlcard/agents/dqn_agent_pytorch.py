@@ -145,6 +145,7 @@ class DQNAgent(object):
         '''
         A = self.predict(state['obs'])
         A = remove_illegal(A, state['legal_actions'])
+        # print("Final A values: {}".format(A))
         action = np.random.choice(np.arange(len(A)), p=A)
         return action
 
@@ -173,15 +174,28 @@ class DQNAgent(object):
             q_values (numpy.array): a 1-d array where each entry represents a Q value
         '''
         epsilon = self.epsilons[min(self.total_t, self.epsilon_decay_steps-1)]
+        print("Eps: {}".format(epsilon))
         A = np.ones(self.action_num, dtype=float) * epsilon / self.action_num
         q_values = self.q_estimator.predict_nograd(np.expand_dims(state, 0))[0]
+        # print("Q values: {}".format(q_values))
         best_action = np.argmax(q_values)
         A[best_action] += (1.0 - epsilon)
+        # print("A values: {}".format(A))
         return A
     
     def raw_q_values(self, state):
+        
+        # Set eps to be 0.1 to see what the end of the training phase is seeing.
+        epsilon = 0.1
+        A = np.ones(self.action_num, dtype=float) * epsilon / self.action_num
 
-        return self.q_estimator.predict_nograd(np.expand_dims(state, 0))[0]
+        q_values = self.q_estimator.predict_nograd(np.expand_dims(state.get('obs'), 0))[0]
+
+        best_action = np.argmax(q_values)
+        A[best_action] += (1.0 - epsilon)
+        A = remove_illegal(A, state.get('legal_actions')) 
+        
+        return q_values, A
 
     def train(self):
         ''' Train the network

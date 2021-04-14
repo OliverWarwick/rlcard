@@ -417,6 +417,7 @@ def tournament(env, num):
         _, _payoffs = env.run(is_training=False)
         # print("_payoffs from env: {}".format(_payoffs))
         # print("Type of _payoffs: {}".format(type(_payoffs)))
+        # print("Payoffs from tournament: {}".format(_payoffs))
         if isinstance(_payoffs, list):
             for _p in _payoffs:
                 for i, _ in enumerate(payoffs):

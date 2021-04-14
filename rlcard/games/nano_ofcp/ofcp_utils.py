@@ -52,6 +52,7 @@ class Row:
         if index_left != index_right:
             # Indexing from 0 -> 9, with 0 being the best so in the case of the self smaller than 
             # other we want index_left > index_right.
+    
             return index_left > index_right
         else:
             # They must have the same hand, so we can check rank perform a more through check.
@@ -75,6 +76,7 @@ class Row:
                 return False
 
     def __eq__(self, other):
+
         index_left, _, rank_left = self.evaluate_row()
         index_right, _, rank_right = other.evaluate_row()
         # print("Left index: {}, Right index: {}, Left rank: {}, Right rank: {}".format(index_left, index_right, rank_left, rank_right))
@@ -174,6 +176,8 @@ class Row:
     def _has_straight(self):
         # We can check if every frequency is 1, and if so whether the first and last (in order)
         # are 4 apart (3, 4, 5, 6, 7) as this is an eq condition under our rank and suit ordering
+        if len(self.cards) != 5:
+            return (False, None)
         does_have_straight = True
         for (rank, freq) in self.rank_freq:
             if freq != 1: 

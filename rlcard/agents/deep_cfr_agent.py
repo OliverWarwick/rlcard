@@ -203,10 +203,13 @@ class DeepCFR():
         init_state, init_player = self._env.reset()
         self._root_node = init_state
         for p in range(self._num_players):
+            print("Starting traversal for player: {}".format(p))
             while init_player != p:
                 init_state, init_player = self._env.reset()
+                print("Init State: {}, Init Player: {}".format(init_state, init_player))
                 self._root_node = init_state
             for _ in range(self._num_traversals):
+                print("Traversal number: {}".format(self._num_traversals))
                 self._traverse_game_tree(self._root_node, init_player)
 
             # Re-initialize advantage networks and train from scratch.
@@ -313,13 +316,16 @@ class DeepCFR():
                 if self._env.get_player_id() == player:
                     break
             self.traverse = []
+            print("Terminal state reached: {}".format(payoff))
             return payoff
 
         if current_player == player:
+            print("Playing for current player, sampling all actions")
             sampled_regret = collections.defaultdict(float)
             # Update the policy over the info set & actions via regret matching.
             _, strategy = self._sample_action_from_advantage(state, player)
             for action in actions:
+                print("Action sampled: {}".format(action))
                 child_state, _ = self._env.step(action)
                 self.traverse.append((action, state, child_state))
                 expected_payoff[action] = self._traverse_game_tree(child_state, player)
@@ -335,6 +341,7 @@ class DeepCFR():
             players_payoff = [max(expected_payoff[act_]) for act_ in expected_payoff.keys()]
             return players_payoff
         else:
+            print("Playing for other player, chosing action from their avg play")
             other_player = current_player
             _, strategy = self._sample_action_from_advantage(state, other_player)
             # Recompute distribution dor numerical errors.

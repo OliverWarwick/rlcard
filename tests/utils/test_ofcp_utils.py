@@ -35,7 +35,7 @@ class TestOFCPUtilsComps(unittest.TestCase):
         self.assertEqual(hand1, "Three of a Kind")
         self.assertEqual(hand2, "Three of a Kind")
         winner = row1 < row2
-        self.assertEqual(winner, False)
+        self.assertEqual(winner, True)
     
     def test_gt_three_of_kind(self):
         row1 = Row([Card("S", "A"), Card("H", "A"), Card("D", "A"), Card("H", "J"), Card("D", "T")])
@@ -136,8 +136,6 @@ class TestOFCPUtilsComps(unittest.TestCase):
         winner = row1 == row2
         self.assertEqual(winner, True)
 
-
-    
     def test_front_back(self):
         front_1 = Row([Card(rank='9', suit='D'), Card(rank='9', suit='C'), Card(rank='9', suit='S')])
         front_2 = Row([Card(rank='J', suit='D'), Card(rank='J', suit='C'), Card(rank='J', suit='S')])
@@ -147,6 +145,19 @@ class TestOFCPUtilsComps(unittest.TestCase):
         winner_2 = back_1 < back_2
         self.assertTrue(winner_1)
         self.assertTrue(winner_2)
+
+    def test_straight_small_cards(self):
+        front_1 = Row([Card(rank='A', suit='D'), Card(rank='J', suit='C'), Card(rank='T', suit='S')])
+        front_1._get_rank_freq()
+        front_1._get_suit_freq()
+        self.assertFalse(front_1._has_straight()[0])
+
+    def test_flush_small_cards(self):
+        front_1 = Row([Card(rank='A', suit='S'), Card(rank='J', suit='S'), Card(rank='T', suit='S')])
+        front_1._get_rank_freq()
+        front_1._get_suit_freq()
+        self.assertFalse(front_1._has_flush()[0])
+
     
 
     

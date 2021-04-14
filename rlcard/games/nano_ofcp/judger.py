@@ -19,7 +19,6 @@ class Nano_OFCP_Judger(object):
         Returns:
             status (Bool): the status of of whether the player is Bust. 
         '''
-        
         return Row(player.front_row) > Row(player.back_row)
 
 
@@ -38,14 +37,13 @@ class Nano_OFCP_Judger(object):
             List[int]: [int, int] scores from this round.
         '''
 
-        if not game.is_over():
-            return [0, 0]
-
         # print("Bust status. Player 1: {}, Player 2: {}".format(self.judge_bust(game.players[0]), self.judge_bust(game.players[1])))
-
         scores = [0, 0]
-        if self.judge_bust(game.players[0]) and self.judge_bust(game.players[1]):
-            pass
+        
+        if not game.is_over():
+            scores = [0, 0]
+        elif self.judge_bust(game.players[0]) and self.judge_bust(game.players[1]):
+            scores = [0, 0]
         elif self.judge_bust(game.players[0]):
             scores = [-2, 2]
         elif self.judge_bust(game.players[1]):
