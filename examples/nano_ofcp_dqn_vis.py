@@ -64,9 +64,9 @@ def play_out_game(env, count):
 
             q_values, with_eps_q_values = env.agents[player_id].raw_q_values(state)
 
-            filtered_action_prob_values = [(env.actions[i], q_values[i], with_eps_q_values[i], probablities[i]) for i in state.get('legal_actions')]
+            filtered_action_prob_values = [(env.actions[i], q_values[i], probablities[i]) for i in state.get('legal_actions')]
 
-            print("[    ACTION    |  Q_VALUES  |  WITH EPS  |   ACTION PROB  ] ")
+            print("[    ACTION    |  Q_VALUES  |  ACTION PROB  ] ")
             print(*filtered_action_prob_values, sep='\n')
             
             print("Legal Actions: {}".format(state.get('legal_actions')))
