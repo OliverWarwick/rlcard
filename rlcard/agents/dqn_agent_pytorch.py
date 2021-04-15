@@ -174,7 +174,7 @@ class DQNAgent(object):
             q_values (numpy.array): a 1-d array where each entry represents a Q value
         '''
         epsilon = self.epsilons[min(self.total_t, self.epsilon_decay_steps-1)]
-        print("Eps: {}".format(epsilon))
+        # print("Eps: {}".format(epsilon))
         A = np.ones(self.action_num, dtype=float) * epsilon / self.action_num
         q_values = self.q_estimator.predict_nograd(np.expand_dims(state, 0))[0]
         # print("Q values: {}".format(q_values))

@@ -9,9 +9,9 @@ from rlcard.agents import RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
 
-def training_run(evaluate_every = 1000, 
-                evaluate_num = 2500, 
-                episode_num = 20000, 
+def training_run(evaluate_every = 2500, 
+                evaluate_num = 10000, 
+                episode_num = 100000, 
                 memory_init_size = 1000, 
                 train_every = 1, 
                 log_dir = None,
@@ -41,9 +41,13 @@ def training_run(evaluate_every = 1000,
                     replay_memory_init_size=memory_init_size,
                     train_every=train_every,
                     state_shape=env.state_shape,
-                    mlp_layers=[64, 64],
+                    mlp_layers=[128, 128],
                     device=torch.device('cpu'),
-                    epsilon_decay_steps=50000)
+                    epsilon_decay_steps=episode_num * 3,
+                    epsilon_start=0.5,
+                    epsilon_end=0,
+                    learning_rate=0.001,
+                    update_target_estimator_every=evaluate_every) # Normally 0.00005
     random_agent = RandomAgent(action_num=eval_env.action_num)
     env.set_agents([agent, random_agent])
     eval_env.set_agents([agent, random_agent])
@@ -72,10 +76,10 @@ def training_run(evaluate_every = 1000,
             tour_score = tournament(eval_env, evaluate_num)[0]
             if tour_score > best_score:
                 state_dict = agent.get_state_dict()
-                print(os.path.join(save_dir, 'best_model.pth'))
-                torch.save(state_dict, os.path.join(save_dir, 'best_model.pth'))
+                print(os.path.join(save_dir, 'best_model_updated_low_eps.pth'))
+                torch.save(state_dict, os.path.join(save_dir, 'best_model_updated_low_eps.pth'))
                 best_score = tour_score
-                logger.log(str(env.timestep) + "  Saving best model. Accuracy: " + str(best_score))
+                logger.log(str(env.timestep) + "  Saving best model. Expected Reward: " + str(best_score))
 
             logger.log_performance(env.timestep, tournament(eval_env, evaluate_num)[0])
 

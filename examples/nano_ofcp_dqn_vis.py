@@ -17,11 +17,15 @@ from nano_ofcp_dqn_pytorch_load_model import env_load_dqn_agent_and_random_agent
 from rlcard.utils.utils import reorganize, print_card
 
 
+def play_out_game(env, count):
 
-def play_out_game(env):
+    set_global_seed(100)
 
     trajectories = [[] for _ in range(env.player_num)]
     state, player_id = env.reset()
+    if count != 0:
+        print("Shuffling")
+        env.game.dealer.shuffle()
 
     # Loop to play the game
     trajectories[player_id].append(state)
@@ -54,11 +58,25 @@ def play_out_game(env):
             print_card(rows[5])
             print()
 
-            # Agent plays
-            action, probablities = env.agents[player_id].eval_step(state)
-            values = env.agents[player_id].raw_q_values(state.get('obs'))
-            filtered_action_prob_values = [(env.actions[i], values[i], probablities[i]) for i in state.get('legal_actions')]
+        # Agent plays
+        action, probablities = env.agents[player_id].eval_step(state)
+        if isinstance(env.agents[player_id], DQNAgent):
+
+            q_values, with_eps_q_values = env.agents[player_id].raw_q_values(state)
+
+            filtered_action_prob_values = [(env.actions[i], q_values[i], with_eps_q_values[i], probablities[i]) for i in state.get('legal_actions')]
+
+            print("[    ACTION    |  Q_VALUES  |  WITH EPS  |   ACTION PROB  ] ")
             print(*filtered_action_prob_values, sep='\n')
+            
+            print("Legal Actions: {}".format(state.get('legal_actions')))
+
+            for potenital_action in state.get('legal_actions'):
+                # Get the reward for playing it.
+                env.step(potenital_action)
+                reward = env.get_payoffs()
+                print("Reward for taking action {}: {}".format(env.actions[potenital_action], reward))
+                env.step_back()
 
         # print(probablities[state.get('legal_actions')])
 
@@ -81,6 +99,7 @@ def play_out_game(env):
         trajectories[player_id].append(state)
 
     # Payoffs
+    print("Final call to payoff\n\n\n\n")
     payoffs = env.get_payoffs()
 
     # Reorganize the trajectories
@@ -90,11 +109,22 @@ def play_out_game(env):
     perfect_info = env.get_perfect_information()
     print(perfect_info)
 
+    print("Payoffs: ")
+    print(payoffs)
+
+    print("Trajectories:")
+    print(*trajectories, sep='\n')
+
     return trajectories, payoffs
     
 
 
 if __name__ == "__main__":
-    env = env_load_dqn_agent_and_random_agent(trainable=False)
-    play_out_game(env)
-    
+    env = env_load_dqn_agent_and_random_agent(trainable=False, agent_path='models/nano_dqn_pytorch/best_model_updated_128.pth')
+    count = 0
+    while True:
+        play_out_game(env, count)
+        play_again = input("\n\nq to quit, or any key to deal another hand: ")
+        if play_again == 'q':
+            break
+        count += 1 
