@@ -31,11 +31,12 @@ class Nano_OFCP_Game(object):
         # Player to play first should alternate between the players in order to not give
         # an advantaged to over the other.
         if self.player_to_lead is None:
-            self.player_to_lead = random.randint(0,2)
+            self.player_to_lead = random.randint(0,1)
         else:
             self.player_to_lead = (self.player_to_lead + 1) % self.num_players
 
         self.game_pointer = self.player_to_lead
+        print("self.game_pointer = %d" % self.game_pointer)
         self.history = []
         self.round = Round(num_players=self.num_players,
                            np_random=self.np_random)

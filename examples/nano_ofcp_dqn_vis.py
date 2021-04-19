@@ -121,10 +121,16 @@ def play_out_game(env, count):
 
 if __name__ == "__main__":
     env = env_load_dqn_agent_and_random_agent(trainable=False, agent_path='models/nano_dqn_pytorch/best_model_updated_128.pth')
-    count = 0
-    while True:
-        play_out_game(env, count)
-        play_again = input("\n\nq to quit, or any key to deal another hand: ")
-        if play_again == 'q':
-            break
-        count += 1 
+
+    # Play tournament to see how good the agent is.
+    # play_tournament(env, 10000)
+
+
+
+    # count = 0
+    # while True:
+    #     play_out_game(env, count)
+    #     play_again = input("\n\nq to quit, or any key to deal another hand: ")
+    #     if play_again == 'q':
+    #         break
+    #     count += 1 

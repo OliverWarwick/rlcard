@@ -25,3 +25,4 @@ from rlcard.agents.blackjack_human_agent import HumanAgent as BlackjackHumanAgen
 from rlcard.agents.random_agent import RandomAgent
 from rlcard.agents.uno_human_agent import HumanAgent as UnoHumanAgent
 from rlcard.agents.nano_ofcp_human_agent import HumanAgent as NanoOFCPHumanAgent
+from rlcard.agents.nano_ofcp_perfect_info_agent import PerfectInfoAgent as NanoOFCPPerfectInfoAgent

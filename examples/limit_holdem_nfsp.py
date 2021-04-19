@@ -71,6 +71,8 @@ with tf.Session() as sess:
         # Generate data from the environment
         trajectories, _ = env.run(is_training=True)
 
+        logger.log(str(trajectories))
+
         # Feed transitions into agent memory, and train the agent
         for i in range(env.player_num):
             for ts in trajectories[i]:

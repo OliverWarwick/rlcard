@@ -1,6 +1,7 @@
 from rlcard.utils import init_mini_deck
 from rlcard.games.nano_ofcp.ofcp_utils import STRING_TO_RANK
 import numpy as np
+import time
 
 class Nano_OFCP_Dealer(object):
 
@@ -41,5 +42,5 @@ class Nano_OFCP_Dealer(object):
         Args:
             player_id (int): the target player's id.
         """
-        cards = sorted([self.deck.pop() for _ in range(3)], key=lambda card: (STRING_TO_RANK.get(card.rank), card.suit), reverse=True)
+        cards = sorted([self.deck.pop(0) for _ in range(3)], key=lambda card: (STRING_TO_RANK.get(card.rank), card.suit), reverse=True)
         player.cards_to_play = cards

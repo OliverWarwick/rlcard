@@ -7,6 +7,8 @@ import rlcard
 from rlcard.envs import Env
 from rlcard.games.nano_ofcp import Game, ActionChoiceException
 from rlcard.games.nano_ofcp.ofcp_utils import STRING_TO_RANK
+from rlcard.agents import RandomAgent, NanoOFCPPerfectInfoAgent
+from rlcard.utils import *
 
 DEFAULT_GAME_CONFIG = {
     'game_player_num': 2,
@@ -43,6 +45,95 @@ class NanoOFCPEnv(Env):
         super().__init__(config)
         self.actions = [['D', 'F', 'F'], ['D', 'F', 'B'], ['D', 'B', 'F'], ['D', 'B', 'B'], ['F', 'D', 'F'], ['F', 'D', 'B'], ['B', 'D', 'F'], ['B', 'D', 'B'], ['F', 'F', 'D'], ['F', 'B', 'D'], ['B', 'F', 'D'], ['B', 'B', 'D']]
         self.state_shape = 4 * 3 + 2 * 3 # Each row is 3 cards and we have 4 for us, with just 2 visible from the oppo.
+
+    def heuristic_agent_run(self, is_training=False):
+        '''
+        Run a complete game, either for evaluation or training RL agent.
+
+        Args:
+            is_training (boolean): True if for training purpose.
+
+        Returns:
+            (tuple) Tuple containing:
+            (list): A list of trajectories generated from the environment.
+            (list): A list payoffs. Each entry corresponds to one player.
+
+        Note: The trajectories are 3-dimension list. The first dimension is for different players.
+              The second dimension is for different transitions. The third dimension is for the contents of each transiton
+        '''
+        trajectories = [[] for _ in range(self.player_num)]
+        state, player_id = self.reset()
+
+        # Once we've reset ontain the cards which will be dealt. 
+        # print("Cards in the deck after reset (init_game called): ")
+        # print(self.game.dealer.deck)
+        # print("Cards in the players hands: ")
+        # print(self.game.players[0].cards_to_play)
+        # print(self.game.players[1].cards_to_play)
+        # print("Game pointer: ", self.game.game_pointer)
+
+        # Check whether the Heurisitc agent is the first or the second character. 
+        if isinstance(self.agents[0], NanoOFCPPerfectInfoAgent):
+            dealt_cards = [0,1,2,6,7,8]
+            cards_to_deal = [cards for index, cards in enumerate(self.game.dealer.deck) if index in dealt_cards]
+            # print("Cards to deal to heuristic agent: " + str(cards_to_deal))
+            
+            # print("Len to play: ", len(self.game.players[0].cards_to_play))
+            # print("Len of cards: " + str(len(cards_to_deal)))
+            self.agents[0].set_up(deals=self.game.players[0].cards_to_play + cards_to_deal)
+        if isinstance(self.agents[1], NanoOFCPPerfectInfoAgent):
+            dealt_cards = [3,4,5,9,10,11]
+            cards_to_deal = [cards for index, cards in enumerate(self.game.dealer.deck) if index in dealt_cards]
+            # print("Cards to deal to heuristic agent: " + str(cards_to_deal))
+            self.agents[1].set_up(deals=self.game.players[1].cards_to_play + cards_to_deal)
+    
+
+        # Loop to play the game
+        trajectories[player_id].append(state)
+        while not self.is_over():
+            # print("Self game pointer: " + str(self.game.game_pointer))
+
+            # Agent plays
+            if isinstance(self.agents[player_id], NanoOFCPPerfectInfoAgent):
+                if not is_training:
+                    # print("Calling heuristic agent eval_step")
+                    # print("Cards to play for heuristic agent: " + str(self.game.players[player_id].cards_to_play))
+                    action = self.agents[player_id].eval_step()
+                else:
+                    action = self.agents[player_id].step()
+            else:
+                if not is_training:
+                    # print("Calling random agent eval_step")
+                    action, _ = self.agents[player_id].eval_step(state)
+                else:
+                    action = self.agents[player_id].step(state)
+
+            # Environment steps
+            next_state, next_player_id = self.step(action, self.agents[player_id].use_raw)
+            # Save action
+            trajectories[player_id].append(action) 
+            # Set the state and player
+            state = next_state
+            player_id = next_player_id
+
+            # Save state.
+            if not self.game.is_over():
+                trajectories[player_id].append(state)
+
+        # Add a final state to all the players
+        for player_id in range(self.player_num):
+            state = self.get_state(player_id)
+            trajectories[player_id].append(state)
+
+        # Payoffs
+        payoffs = self.get_payoffs()
+
+        # Reorganize the trajectories
+        trajectories = reorganize(trajectories, payoffs)
+
+        return trajectories, payoffs
+
+
 
     def _get_legal_actions(self):
         ''' Get all leagal actions
