@@ -9,9 +9,9 @@ from rlcard.agents import RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
 
-def training_run(evaluate_every = 2500, 
-                evaluate_num = 10000, 
-                episode_num = 100000, 
+def training_run(evaluate_every = 1000, 
+                evaluate_num = 2500, 
+                episode_num = 10000, 
                 memory_init_size = 1000, 
                 train_every = 1, 
                 log_dir = None,
@@ -23,13 +23,13 @@ def training_run(evaluate_every = 2500,
 
     # The paths for saving the logs and learning curves
     if log_dir is None:
-        log_dir = './experiments/nano_ofcp_dqn_result/'
+        log_dir = './experiments/nano_ofcp_dqn_result_one_hot_encoding/'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
     # Set up the model saving folder.
     if save_dir is None:
-        save_dir = 'models/nano_dqn_pytorch'
+        save_dir = 'models/nano_ofcp_dqn_result_one_hot_encoding'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
@@ -45,7 +45,7 @@ def training_run(evaluate_every = 2500,
                     device=torch.device('cpu'),
                     epsilon_decay_steps=episode_num * 3,
                     epsilon_start=0.5,
-                    epsilon_end=0,
+                    epsilon_end=0.05,
                     learning_rate=0.001,
                     update_target_estimator_every=evaluate_every) # Normally 0.00005
     random_agent = RandomAgent(action_num=eval_env.action_num)
@@ -76,8 +76,8 @@ def training_run(evaluate_every = 2500,
             tour_score = tournament(eval_env, evaluate_num)[0]
             if tour_score > best_score:
                 state_dict = agent.get_state_dict()
-                print(os.path.join(save_dir, 'best_model_updated_low_eps.pth'))
-                torch.save(state_dict, os.path.join(save_dir, 'best_model_updated_low_eps.pth'))
+                print(os.path.join(save_dir, 'best_model.pth'))
+                torch.save(state_dict, os.path.join(save_dir, 'best_model.pth'))
                 best_score = tour_score
                 logger.log(str(env.timestep) + "  Saving best model. Expected Reward: " + str(best_score))
 

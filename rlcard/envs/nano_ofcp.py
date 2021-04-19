@@ -44,7 +44,7 @@ class NanoOFCPEnv(Env):
         self.game = Game()
         super().__init__(config)
         self.actions = [['D', 'F', 'F'], ['D', 'F', 'B'], ['D', 'B', 'F'], ['D', 'B', 'B'], ['F', 'D', 'F'], ['F', 'D', 'B'], ['B', 'D', 'F'], ['B', 'D', 'B'], ['F', 'F', 'D'], ['F', 'B', 'D'], ['B', 'F', 'D'], ['B', 'B', 'D']]
-        self.state_shape = 4 * 3 + 2 * 3 # Each row is 3 cards and we have 4 for us, with just 2 visible from the oppo.
+        self.state_shape = 6 * 3 * 6 # Each row is 3 cards and their are 6 of these. For each of the cards we have a 6 element one hot encoding.
 
     def heuristic_agent_run(self, is_training=False):
         '''
@@ -165,17 +165,28 @@ class NanoOFCPEnv(Env):
             for _ in range(3-len(row)):
                 row.append(None)
 
-        
-        f = lambda x: STRING_TO_RANK.get(x.rank) if x is not None else 0
-        rank_vector = [[f(x) for x in row] for row in extracted_state['hands']]
+        # print(extracted_state['hands'])
+        # Let f be a function which maps a vector of cards e.g: [TD, QS, None] to a one encoding of each card.
+        # There are 6 possiblilities [None, T, J, Q, K, A] which will used to select the one hot element.
+        one_hot_mapping = {"T": 1, "J": 2, "Q": 3, "K": 4, "A": 5}
+        # f = lambda x: STRING_TO_RANK.get(x.rank) if x is not None else 0
+        index_vector = np.array([[one_hot_mapping.get(x.rank) if x is not None else 0 for x in row] for row in extracted_state['hands']]).flatten()
+        # print(index_vector)
+        # Then reshape this into a one - hot vector.
+        assert len(index_vector) == 18
+        one_hot_matrix = np.zeros((index_vector.size, 6))
+        one_hot_matrix[np.arange(index_vector.size), index_vector] = 1
+        # print(one_hot_matrix)
+        assert np.shape(one_hot_matrix) == (18, 6)
+        one_hot_vector = one_hot_matrix.flatten()
+        assert np.shape(one_hot_vector) == (18 * 6, )
+        # print(one_hot_vector)
 
-
-        flattern_rank_vector = np.array(rank_vector).flatten()
 
         # We want to run through these and anywhere there is empty space we can add
         # extra zeros from the index. 
         # Obvs is what an agent can use to make a decision. This in our case is the vector embedding of our cards and those which are visable from the side of the oppo.
-        extracted_state['obs'] = flattern_rank_vector
+        extracted_state['obs'] = one_hot_vector
 
         # We pass back the raw data which is used by functions such as the human player to write out all of the cards. 
         if self.allow_raw_data:

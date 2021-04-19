@@ -36,7 +36,7 @@ class Nano_OFCP_Game(object):
             self.player_to_lead = (self.player_to_lead + 1) % self.num_players
 
         self.game_pointer = self.player_to_lead
-        print("self.game_pointer = %d" % self.game_pointer)
+        # print("self.game_pointer = %d" % self.game_pointer)
         self.history = []
         self.round = Round(num_players=self.num_players,
                            np_random=self.np_random)

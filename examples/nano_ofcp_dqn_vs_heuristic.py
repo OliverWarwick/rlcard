@@ -6,7 +6,7 @@ import tensorflow as tf
 import os
 
 import rlcard
-from rlcard.agents import DQNAgent, NanoOFCPPerfectInfoAgent
+from rlcard.agents import DQNAgent, NanoOFCPPerfectInfoAgent, RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
 from nano_ofcp_heuristic_vs_random import heuristic_agent_tournament
@@ -27,7 +27,7 @@ memory_init_size = 100
 train_every = 1
 
 # The paths for saving the logs and learning curves
-log_dir = './experiments/nano_ofcp_dqn_vs_heur_result/'
+log_dir = './ow_experiments/nano_ofcp_dqn_vs_heur_result/'
 
 # Set a global seed
 set_global_seed(0)
@@ -48,8 +48,9 @@ with tf.Session() as sess:
                      state_shape=env.state_shape,
                      mlp_layers=[128, 128])
     h_agent = NanoOFCPPerfectInfoAgent(action_num=eval_env.action_num, use_raw=True, alpha=0.25)
+    r_agent = RandomAgent(action_num=eval_env.action_num)
     env.set_agents([agent_1, h_agent])
-    eval_env.set_agents([agent_1, h_agent])
+    eval_env.set_agents([agent_1, r_agent])
 
     # Initialize global variables
     sess.run(tf.global_variables_initializer())
@@ -77,7 +78,7 @@ with tf.Session() as sess:
     logger.plot('nano_ofcp')
     
     # Save model
-    save_dir = 'models/nano_ofcp_dqn_vs_heur'
+    save_dir = './ow_models/nano_ofcp_dqn_vs_heur'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     saver = tf.train.Saver()

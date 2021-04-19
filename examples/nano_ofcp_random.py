@@ -7,7 +7,7 @@ from rlcard.utils import set_global_seed
 
 # Make environment
 env = rlcard.make('nano_ofcp', config={'seed': 0})
-episode_num = 2
+episode_num = 1
 
 # Set a global seed
 set_global_seed(0)
