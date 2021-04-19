@@ -9,9 +9,9 @@ from rlcard.agents import RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
 
-def training_run(evaluate_every = 1000, 
-                evaluate_num = 2500, 
-                episode_num = 10000, 
+def training_run(evaluate_every = 2500, 
+                evaluate_num = 5000, 
+                episode_num = 25000, 
                 memory_init_size = 1000, 
                 train_every = 1, 
                 log_dir = None,
@@ -29,7 +29,7 @@ def training_run(evaluate_every = 1000,
 
     # Set up the model saving folder.
     if save_dir is None:
-        save_dir = 'models/nano_ofcp_dqn_result_one_hot_encoding'
+        save_dir = './models/nano_ofcp_dqn_result_one_hot_encoding/'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
@@ -44,7 +44,7 @@ def training_run(evaluate_every = 1000,
                     mlp_layers=[128, 128],
                     device=torch.device('cpu'),
                     epsilon_decay_steps=episode_num * 3,
-                    epsilon_start=0.5,
+                    epsilon_start=0.9,
                     epsilon_end=0.05,
                     learning_rate=0.001,
                     update_target_estimator_every=evaluate_every) # Normally 0.00005

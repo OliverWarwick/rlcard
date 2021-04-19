@@ -14,6 +14,7 @@ if 'tensorflow' in installed_packages:
     from rlcard.agents.dqn_agent import DQNAgent
     from rlcard.agents.nfsp_agent import NFSPAgent
 if 'torch' in installed_packages:
+    print("Importing DQN agent.")
     from rlcard.agents.dqn_agent_pytorch import DQNAgent as DQNAgentPytorch
     from rlcard.agents.nfsp_agent_pytorch import NFSPAgent as NFSPAgentPytorch
 

@@ -16,9 +16,9 @@ env = rlcard.make('nano_ofcp', config={'seed': 0})
 eval_env = rlcard.make('nano_ofcp', config={'seed': 0})
 
 # Set the iterations numbers and how frequently we evaluate performance
-evaluate_every = 500
-evaluate_num = 250
-episode_num = 5000
+evaluate_every = 1000
+evaluate_num = 2500
+episode_num = 10000
 
 # The intial memory size
 memory_init_size = 100
@@ -65,7 +65,13 @@ with tf.Session() as sess:
 
         # Feed transitions into agent memory, and train the agent
         for ts in trajectories[0]:
+            # print("feeding agent with trahj 0")
+            # print(ts)
             agent_1.feed(ts)
+        # for ts in trajectories[1]:
+        #     print("feeding agent with trahj 1")
+        #     print(ts)
+        #     agent_1.feed(ts)
 
         # Evaluate the performance. Play with random agents.
         if episode % evaluate_every == 0:
