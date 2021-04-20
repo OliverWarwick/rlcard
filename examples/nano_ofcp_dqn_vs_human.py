@@ -18,7 +18,7 @@ DISCARD_PILE = 3
 OPPO_FRONT_ROW = 0
 OPPO_BACK_ROW = 1
 
-agent_path = 'models/nano_dqn_pytorch/best_model_updated_128.pth'
+agent_path = '/Users/student/rlcard/examples/ow_models/nano_ofcp_dqn_vs_heur/model.pth'
 
 # Make environment and enable human mode
 # Set 'record_action' to True because we need it to print results
@@ -37,7 +37,6 @@ dqn_agent = DQNAgent(scope='dqn',
                         )
 checkpoint = torch.load(agent_path)
 dqn_agent.load(checkpoint)
-
 
 env.set_agents([human_agent, dqn_agent])
 

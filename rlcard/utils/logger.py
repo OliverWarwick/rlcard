@@ -46,6 +46,21 @@ class Logger(object):
         self.log('  timestep     |  ' + str(timestep))
         self.log('  reward       |  ' + str(reward))
         self.log('----------------------------------------')
+    
+    def log_performance_using_env(self, timestep, env, reward):
+        ''' Log a point in the curve
+        Args:
+            timestep (int): the timestep of the current point
+            env (str): name of env
+            reward (float): the reward of the current point
+        '''
+        self.writer.writerow({'timestep': timestep,'reward': reward})
+        print('')
+        self.log('----------------------------------------')
+        self.log('  timestep     |  ' + str(timestep))
+        self.log('  env          |  ' + env)
+        self.log('  reward       |  ' + str(reward))
+        self.log('----------------------------------------')
 
     def plot(self, algorithm):
         plot(self.csv_path, self.fig_path, algorithm)

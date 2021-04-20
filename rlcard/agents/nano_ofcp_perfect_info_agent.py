@@ -56,7 +56,7 @@ class PerfectInfoAgent:
         # sampling at the low alphas (e.g: 0.1) in which we may get no non-bust solutions in our
         # sample set.
 
-        final_action = [['D', 'F', 'B'], ['D', 'F', 'B'], ['D', 'F', 'B']]
+        final_action = [1, 1, 1]
         actions_checked = 0
 
         front_lowest_poker_index = 9 
@@ -116,7 +116,7 @@ class PerfectInfoAgent:
                         (back_poker_index == back_lowest_poker_index and back_card_rank > back_highest_card_rank and front_poker_index <= front_lowest_poker_index and front_card_rank >= front_highest_card_rank):
 
                             # print("Replacing best action with: ")
-                            final_action = [action1, action2, action3]
+                            final_action = [self.actions.index(action1), self.actions.index(action2), self.actions.index(action3)]
                             # print(final_action)
                             front_lowest_poker_index, front_highest_card_rank, back_lowest_poker_index, back_highest_card_rank = front_poker_index, front_card_rank, back_poker_index, back_card_rank
                             # print("Front Row: {}. \nBack Row: {}".format(self.mock_front_row, self.mock_back_row))
@@ -127,7 +127,7 @@ class PerfectInfoAgent:
             
             self.remove_from_hand(action1, deal1)
         
-        print("Actions chekcked: " + str(actions_checked) + "  Percentage of full action space: " + str(actions_checked / 540))
+        # print("Actions chekcked: " + str(actions_checked) + "  Percentage of full action space: " + str(actions_checked / 540))
         # print("Best set of actions: ")
         # print(final_action)
         # print("Front_index: {}, Front_rank: {}, Back_index: {}, Back_rank: {}".format(front_lowest_index, front_highest_rank, back_lowest_index, back_highest_rank))

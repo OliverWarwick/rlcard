@@ -39,6 +39,7 @@ def play_out_game(env, count):
         # Display the state as we would for a human playing that decision:
         # Get the ending arrangement.
             rows = state.get('hands')
+            print(rows)
 
             print("\n\nSTARTING NEXT DEAL\n\n")
             print('===============   MY HAND  ===============\n')
@@ -64,21 +65,25 @@ def play_out_game(env, count):
 
             q_values, with_eps_q_values = env.agents[player_id].raw_q_values(state)
 
-            filtered_action_prob_values = [(env.actions[i], q_values[i], probablities[i]) for i in state.get('legal_actions')]
-
-            print("[    ACTION    |  Q_VALUES  |  ACTION PROB  ] ")
-            print(*filtered_action_prob_values, sep='\n')
+            filtered_action_prob_values = [[env.actions[i], round(q_values[i], 4) if q_values[i] > 0 else round(q_values[i], 3), "", ""] for i in state.get('legal_actions')]
             
-            print("Legal Actions: {}".format(state.get('legal_actions')))
-
-            for potenital_action in state.get('legal_actions'):
-                # Get the reward for playing it.
-                env.step(potenital_action)
+            for index, ac in enumerate(state.get('legal_actions')):
+                env.step(ac)
+                filtered_action_prob_values[index][2] = [[card.rank for card in env.game.players[0].front_row] + [" " for i in range(3 - len(env.game.players[0].front_row))], [card.rank for card in env.game.players[0].back_row] + [" " for i in range(3 - len(env.game.players[0].back_row))]]
                 reward = env.get_payoffs()
-                print("Reward for taking action {}: {}".format(env.actions[potenital_action], reward))
+                filtered_action_prob_values[index][3] = reward.tolist()
                 env.step_back()
 
-        # print(probablities[state.get('legal_actions')])
+            print("[    ACTION    | Q_VALUES |     FRONT     |     BACK     |   REWARD   ]| ")
+            print(*filtered_action_prob_values, sep='\n')
+            
+            
+            max_index = q_values.tolist().index(max(q_values.tolist()))
+            print(max_index)
+            print("\nMAX VALUE: ")
+            print("   ACTION    | Q VALUE | ALLOWED ")
+            print(env.actions[max_index], round(q_values[max_index],4), max_index in state.get('legal_actions'), sep=', ')
+            print()
 
         # Environment steps
         next_state, next_player_id = env.step(action, env.agents[player_id].use_raw)
@@ -99,38 +104,38 @@ def play_out_game(env, count):
         trajectories[player_id].append(state)
 
     # Payoffs
-    print("Final call to payoff\n\n\n\n")
+    # print("Final call to payoff\n\n\n\n")
     payoffs = env.get_payoffs()
 
     # Reorganize the trajectories
     trajectories = reorganize(trajectories, payoffs)
 
     # Final Layout.
-    perfect_info = env.get_perfect_information()
-    print(perfect_info)
+    # perfect_info = env.get_perfect_information()
+    # print(perfect_info)
 
-    print("Payoffs: ")
-    print(payoffs)
+    # print("Payoffs: ")
+    # print(payoffs)
 
-    print("Trajectories:")
-    print(*trajectories, sep='\n')
+    # print("Trajectories:")
+    # print(*trajectories, sep='\n')
 
     return trajectories, payoffs
     
 
 
 if __name__ == "__main__":
-    env = env_load_dqn_agent_and_random_agent(trainable=False, agent_path='models/nano_dqn_pytorch/best_model_updated_128.pth')
+    env = env_load_dqn_agent_and_random_agent(trainable=False, agent_path='/Users/student/rlcard/examples/ow_models/nano_ofcp_dqn_vs_heur/model.pth')
 
     # Play tournament to see how good the agent is.
-    # play_tournament(env, 10000)
+    # play_tournament(env, 1000)
 
 
 
-    # count = 0
-    # while True:
-    #     play_out_game(env, count)
-    #     play_again = input("\n\nq to quit, or any key to deal another hand: ")
-    #     if play_again == 'q':
-    #         break
-    #     count += 1 
+    count = 0
+    while True:
+        play_out_game(env, count)
+        play_again = input("\n\nq to quit, or any key to deal another hand: ")
+        if play_again == 'q':
+            break
+        count += 1 
