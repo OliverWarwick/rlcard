@@ -9,11 +9,11 @@ from rlcard.agents import RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
 
-def training_run(evaluate_every = 5, 
-                evaluate_num = 5, 
-                episode_num = 10, 
-                memory_init_size = 5, 
-                train_every = 5, 
+def training_run(evaluate_every = 1000, 
+                evaluate_num = 2500, 
+                episode_num = 5000, 
+                memory_init_size = 1000, 
+                train_every = 1, 
                 log_dir = None,
                 save_dir = None):
 

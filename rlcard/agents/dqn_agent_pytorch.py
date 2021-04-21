@@ -206,35 +206,36 @@ class DQNAgent(object):
         Returns:
             loss (float): The loss of the current batch.
         '''
-        state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.memory.sample()
-        if self.verbose: print("State Batch First: {}".format(state_batch[0]))
-        if self.verbose: print("Action Batch First: {}".format(action_batch[0]))
-        if self.verbose: print("Reward Batch First: {}".format(reward_batch[0]))
+        for _ in range(4):
+            state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.memory.sample()
+            if self.verbose: print("State Batch First: {}".format(state_batch[0]))
+            if self.verbose: print("Action Batch First: {}".format(action_batch[0]))
+            if self.verbose: print("Reward Batch First: {}".format(reward_batch[0]))
 
-        # Calculate best next actions using Q-network (Double DQN)
-        q_values_next = self.q_estimator.predict_nograd(next_state_batch)
-        best_actions = np.argmax(q_values_next, axis=1)
-        if self.verbose: print("Q Values for next from predict: {}".format(q_values_next[0]))
-        if self.verbose: print("Best actions: {}".format(best_actions[0]))
+            # Calculate best next actions using Q-network (Double DQN)
+            q_values_next = self.q_estimator.predict_nograd(next_state_batch)
+            best_actions = np.argmax(q_values_next, axis=1)
+            if self.verbose: print("Q Values for next from predict: {}".format(q_values_next[0]))
+            if self.verbose: print("Best actions: {}".format(best_actions[0]))
 
-        # Evaluate best next actions using Target-network (Double DQN)
-        q_values_next_target = self.target_estimator.predict_nograd(next_state_batch)
-        if self.verbose: print("Q Values for next from target: {}".format(q_values_next_target[0]))
-        target_batch = reward_batch + np.invert(done_batch).astype(np.float32) * \
-            self.discount_factor * q_values_next_target[np.arange(self.batch_size), best_actions]
-        if self.verbose: print("Target Batch First: {}".format(target_batch[0]))
+            # Evaluate best next actions using Target-network (Double DQN)
+            q_values_next_target = self.target_estimator.predict_nograd(next_state_batch)
+            if self.verbose: print("Q Values for next from target: {}".format(q_values_next_target[0]))
+            target_batch = reward_batch + np.invert(done_batch).astype(np.float32) * \
+                self.discount_factor * q_values_next_target[np.arange(self.batch_size), best_actions]
+            if self.verbose: print("Target Batch First: {}".format(target_batch[0]))
 
-        # Perform gradient descent update
-        state_batch = np.array(state_batch)
+            # Perform gradient descent update
+            state_batch = np.array(state_batch)
 
-        if self.verbose: print("Passing to the network: ")
-        if self.verbose: print("State Batch: {}".format(state_batch))
-        if self.verbose: print("Action Batch: {}".format(action_batch))
-        if self.verbose: print("Target Batch: {}".format(target_batch))
+            if self.verbose: print("Passing to the network: ")
+            if self.verbose: print("State Batch: {}".format(state_batch))
+            if self.verbose: print("Action Batch: {}".format(action_batch))
+            if self.verbose: print("Target Batch: {}".format(target_batch))
 
-        loss = self.q_estimator.update(state_batch, action_batch, target_batch)
-        print('\rINFO - Agent {}, step {}, rl-loss: {}'.format(self.scope, self.total_t, loss), end='')
-        if self.verbose: print("\n\n\n")
+            loss = self.q_estimator.update(state_batch, action_batch, target_batch)
+            print('\rINFO - Agent {}, step {}, rl-loss: {}'.format(self.scope, self.total_t, loss), end='')
+            if self.verbose: print("\n\n\n")
 
         # Update the target estimator
         if self.train_t % self.update_target_estimator_every == 0:
@@ -318,7 +319,7 @@ class Estimator(object):
         self.mse_loss = nn.MSELoss(reduction='mean')
 
         # set up optimizer
-        self.optimizer =  torch.optim.Adam(self.qnet.parameters(), lr=self.learning_rate)
+        self.optimizer = torch.optim.Adam(self.qnet.parameters(), lr=self.learning_rate)
 
     def predict_nograd(self, s):
         ''' Predicts action values, but prediction is not included
