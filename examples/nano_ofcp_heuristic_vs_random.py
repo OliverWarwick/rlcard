@@ -101,7 +101,7 @@ if __name__ == '__main__':
         # print("Deck before starting: ")
         # print(eval_env.game.dealer.deck)
         score, _, sd = heuristic_agent_tournament(eval_env, evaluate_num)
-        print("Alpha: {} Percentage explored: {:.2f} Score: {} S.D: {}".format(alpha, heuristic_agent.explored_percentage * 100, score, sd))
+        # print("Alpha: {} Percentage explored: {:.2f} Score: {} S.D: {}".format(alpha, heuristic_agent.explored_percentage * 100, score, sd))
         results.append([alpha, heuristic_agent.explored_percentage * 100, score, score - 1.96 * (sd / math.pow(evaluate_num, 0.5)), score + 1.96 * (sd / math.pow(evaluate_num, 0.5))])
 
     print(results)

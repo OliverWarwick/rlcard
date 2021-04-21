@@ -9,11 +9,11 @@ from rlcard.agents import RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
 
-def training_run(evaluate_every = 2500, 
-                evaluate_num = 5000, 
-                episode_num = 25000, 
-                memory_init_size = 1000, 
-                train_every = 1, 
+def training_run(evaluate_every = 5, 
+                evaluate_num = 5, 
+                episode_num = 10, 
+                memory_init_size = 5, 
+                train_every = 5, 
                 log_dir = None,
                 save_dir = None):
 
@@ -23,13 +23,13 @@ def training_run(evaluate_every = 2500,
 
     # The paths for saving the logs and learning curves
     if log_dir is None:
-        log_dir = './experiments/nano_ofcp_dqn_result_one_hot_encoding/'
+        log_dir = '.ow_model/experiments/nano_ofcp_dqn_result_exper/'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
     # Set up the model saving folder.
     if save_dir is None:
-        save_dir = './models/nano_ofcp_dqn_result_one_hot_encoding/'
+        save_dir = '.ow_model/models/nano_ofcp_dqn_result_exper/'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
@@ -47,7 +47,10 @@ def training_run(evaluate_every = 2500,
                     epsilon_start=0.9,
                     epsilon_end=0.05,
                     learning_rate=0.001,
-                    update_target_estimator_every=evaluate_every) # Normally 0.00005
+                    update_target_estimator_every=evaluate_every,
+                    verbose=False, 
+                    batch_size=2,
+                    discount_factor=1.0)
     random_agent = RandomAgent(action_num=eval_env.action_num)
     env.set_agents([agent, random_agent])
     eval_env.set_agents([agent, random_agent])

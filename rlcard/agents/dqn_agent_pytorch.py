@@ -57,7 +57,8 @@ class DQNAgent(object):
                  train_every=1,
                  mlp_layers=None,
                  learning_rate=0.00005,
-                 device=None):
+                 device=None,
+                 verbose=False):
 
         '''
         Q-Learning algorithm for off-policy TD control using Function Approximation.
@@ -94,6 +95,8 @@ class DQNAgent(object):
         self.action_num = action_num
         self.train_every = train_every
 
+        self.verbose = verbose
+
         # Torch device
         if device is None:
             self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -111,9 +114,9 @@ class DQNAgent(object):
 
         # Create estimators
         self.q_estimator = Estimator(action_num=action_num, learning_rate=learning_rate, state_shape=state_shape, \
-            mlp_layers=mlp_layers, device=self.device)
+            mlp_layers=mlp_layers, device=self.device, verbose=verbose)
         self.target_estimator = Estimator(action_num=action_num, learning_rate=learning_rate, state_shape=state_shape, \
-            mlp_layers=mlp_layers, device=self.device)
+            mlp_layers=mlp_layers, device=self.device, verbose=verbose)
 
         # Create replay memory
         self.memory = Memory(replay_memory_size, batch_size)
@@ -204,21 +207,34 @@ class DQNAgent(object):
             loss (float): The loss of the current batch.
         '''
         state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.memory.sample()
+        if self.verbose: print("State Batch First: {}".format(state_batch[0]))
+        if self.verbose: print("Action Batch First: {}".format(action_batch[0]))
+        if self.verbose: print("Reward Batch First: {}".format(reward_batch[0]))
 
         # Calculate best next actions using Q-network (Double DQN)
         q_values_next = self.q_estimator.predict_nograd(next_state_batch)
         best_actions = np.argmax(q_values_next, axis=1)
+        if self.verbose: print("Q Values for next from predict: {}".format(q_values_next[0]))
+        if self.verbose: print("Best actions: {}".format(best_actions[0]))
 
         # Evaluate best next actions using Target-network (Double DQN)
         q_values_next_target = self.target_estimator.predict_nograd(next_state_batch)
+        if self.verbose: print("Q Values for next from target: {}".format(q_values_next_target[0]))
         target_batch = reward_batch + np.invert(done_batch).astype(np.float32) * \
             self.discount_factor * q_values_next_target[np.arange(self.batch_size), best_actions]
+        if self.verbose: print("Target Batch First: {}".format(target_batch[0]))
 
         # Perform gradient descent update
         state_batch = np.array(state_batch)
 
+        if self.verbose: print("Passing to the network: ")
+        if self.verbose: print("State Batch: {}".format(state_batch))
+        if self.verbose: print("Action Batch: {}".format(action_batch))
+        if self.verbose: print("Target Batch: {}".format(target_batch))
+
         loss = self.q_estimator.update(state_batch, action_batch, target_batch)
         print('\rINFO - Agent {}, step {}, rl-loss: {}'.format(self.scope, self.total_t, loss), end='')
+        if self.verbose: print("\n\n\n")
 
         # Update the target estimator
         if self.train_t % self.update_target_estimator_every == 0:
@@ -271,7 +287,7 @@ class Estimator(object):
     This network is used for both the Q-Network and the Target Network.
     '''
 
-    def __init__(self, action_num=2, learning_rate=0.001, state_shape=None, mlp_layers=None, device=None):
+    def __init__(self, action_num=2, learning_rate=0.001, state_shape=None, mlp_layers=None, device=None, verbose=False):
         ''' Initilalize an Estimator object.
 
         Args:
@@ -285,9 +301,10 @@ class Estimator(object):
         self.state_shape = state_shape
         self.mlp_layers = mlp_layers
         self.device = device
+        self.verbose = verbose
 
         # set up Q model and place it in eval mode
-        qnet = EstimatorNetwork(action_num, state_shape, mlp_layers)
+        qnet = EstimatorNetwork(action_num, state_shape, mlp_layers, verbose)
         qnet = qnet.to(self.device)
         self.qnet = qnet
         self.qnet.eval()
@@ -344,13 +361,20 @@ class Estimator(object):
 
         # (batch, state_shape) -> (batch, action_num)
         q_as = self.qnet(s)
+        if self.verbose: print("Q Actions From Network: {}".format(q_as))
 
         # (batch, action_num) -> (batch, )
         Q = torch.gather(q_as, dim=-1, index=a.unsqueeze(-1)).squeeze(-1)
+        if self.verbose: print("Q unwrapped: {}".format(Q))
+        if self.verbose: print("Y: {}".format(y))
+        Q.retain_grad()
 
         # update model
         batch_loss = self.mse_loss(Q, y)
         batch_loss.backward()
+
+        if self.verbose: print("Batch Loss Grad: {}".format(batch_loss.grad))
+        if self.verbose: print("Q Grad: {}".format(Q.grad))
         self.optimizer.step()
         batch_loss = batch_loss.item()
 
@@ -364,7 +388,7 @@ class EstimatorNetwork(nn.Module):
         It is just a series of tanh layers. All in/out are torch.tensor
     '''
 
-    def __init__(self, action_num=2, state_shape=None, mlp_layers=None):
+    def __init__(self, action_num=2, state_shape=None, mlp_layers=None, verbose=False):
         ''' Initialize the Q network
 
         Args:
@@ -377,13 +401,16 @@ class EstimatorNetwork(nn.Module):
         self.action_num = action_num
         self.state_shape = state_shape
         self.mlp_layers = mlp_layers
+        self.verbose = verbose
 
         # build the Q network
         layer_dims = [np.prod(self.state_shape)] + self.mlp_layers
         fc = [nn.Flatten()]
         fc.append(nn.BatchNorm1d(layer_dims[0]))
         for i in range(len(layer_dims)-1):
-            fc.append(nn.Linear(layer_dims[i], layer_dims[i+1], bias=True))
+            lin_layer = nn.Linear(layer_dims[i], layer_dims[i+1], bias=True)
+            if self.verbose: lin_layer.register_backward_hook(hook_fn)
+            fc.append(lin_layer)
             fc.append(nn.Tanh())
         fc.append(nn.Linear(layer_dims[-1], self.action_num, bias=True))
         self.fc_layers = nn.Sequential(*fc)
@@ -457,3 +484,8 @@ def copy_model_parameters(sess, estimator1, estimator2):
 
     sess.run(update_ops)
 
+def hook_fn(m, i, o):
+    print("\n\n\n")
+    print(m)
+    print(i[0])
+    print(o[0])

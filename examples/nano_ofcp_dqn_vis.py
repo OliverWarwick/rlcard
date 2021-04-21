@@ -111,8 +111,8 @@ def play_out_game(env, count):
     trajectories = reorganize(trajectories, payoffs)
 
     # Final Layout.
-    # perfect_info = env.get_perfect_information()
-    # print(perfect_info)
+    perfect_info = env.get_perfect_information()
+    print(perfect_info)
 
     # print("Payoffs: ")
     # print(payoffs)

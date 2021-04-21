@@ -28,7 +28,15 @@ memory_init_size = 1000
 train_every = 1
 
 # The paths for saving the logs and learning curves
-log_dir = './ow_experiments/nano_ofcp_dqn_vs_heur_result/'
+# log_dir = '/content/drive/MyDrive/msc_thesis/nano_ofcp_models/one_hot_encoding_dqn_vs_heur_only_heur/logs/'
+log_dir = './ow_models/nano_ofcp_dqn_vs_heur_only_heur/logs'
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+# Set up the model saving folder.
+save_dir = './ow_models/nano_ofcp_dqn_vs_heur_only_heur/models'
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
 
 # Set a global seed
 set_global_seed(0)
@@ -46,9 +54,10 @@ agent_1 = DQNAgent(scope='dqn',
                 epsilon_start=0.9,
                 epsilon_end=0.05,
                 learning_rate=10e-4, 
-                update_target_estimator_every=2000)
+                update_target_estimator_every=2000,
+                discount_factor=1.0)
 
-h_agent = NanoOFCPPerfectInfoAgent(action_num=env.action_num, use_raw=False, alpha=0.25)
+h_agent = NanoOFCPPerfectInfoAgent(action_num=env.action_num, use_raw=False, alpha=1)
 r_agent = RandomAgent(action_num=env.action_num)
 env.set_agents([agent_1, h_agent])
 eval_env_random.set_agents([agent_1, r_agent])
@@ -73,12 +82,13 @@ for episode in range(episode_num):
     #     print(ts)
     #     agent_1.feed(ts)
 
-    for i in range(env.player_num):
-        for ts in trajectories[i]:
-            agent_1.feed(ts)
+    # for i in range(env.player_num):
+    for ts in trajectories[1]:
+        agent_1.feed(ts)
 
     # Evaluate the performance. Play with random agents.
     if episode % evaluate_every == 0:
+        print("Epsilon Value: {}".format(agent_1.epsilons[min(agent_1.total_t, agent_1.epsilon_decay_steps-1)]))
         logger.log_performance_using_env(env.timestep, "Heuristic", heuristic_agent_tournament(eval_env_heur, evaluate_num)[0])
         logger.log_performance_using_env(env.timestep, "Random", heuristic_agent_tournament(eval_env_random, evaluate_num)[0])
 
@@ -90,9 +100,6 @@ logger.close_files()
 logger.plot('nano_ofcp')
 
 # Save model
-save_dir = './ow_models/nano_ofcp_dqn_vs_heur'
-if not os.path.exists(save_dir):
-    os.makedirs(save_dir)
 state_dict = agent_1.get_state_dict()
 torch.save(state_dict, os.path.join(save_dir, 'model.pth'))
 
