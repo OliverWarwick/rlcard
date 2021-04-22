@@ -99,8 +99,8 @@ for episode in range(episode_num):
             best_score = tour_score_player_0_br
             logger.log(str(env.timestep) + "  Saving best model. Score vs Random Agent: " + str(best_score))
 
-        logger.log_performance_using_env("Best Response", env.timestep, tour_score_player_0_br)
-        logger.log_performance_using_env("Average Policy", env.timestep, tour_score_player_0_ap)
+        logger.log_performance_using_algo("Best Response", env.timestep, tour_score_player_0_br)
+        logger.log_performance_using_algo("Average Policy", env.timestep, tour_score_player_0_ap)
 
 # Close files in the logger
 logger.close_files()
