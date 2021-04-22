@@ -11,13 +11,13 @@ from rlcard.utils import Logger
 
 # Make environment
 env = rlcard.make('nano_ofcp', config={'seed': 0})
-eval_env = rlcard.make('nano_ofcp', config={'seed': 0})
+eval_env_0 = rlcard.make('nano_ofcp', config={'seed': 0})
+eval_env_1 = rlcard.make('nano_ofcp', config={'seed': 0})
 
 # Set the iterations numbers and how frequently we evaluate/save plot
-evaluate_every = 1000
+evaluate_every = 2000
 evaluate_num = 5000
-episode_num = 50000
-
+episode_num = 2500
 # The intial memory size
 memory_init_size = 1000
 
@@ -25,12 +25,14 @@ memory_init_size = 1000
 train_every = 16
 
 # The paths for saving the logs and learning curves
-log_dir = './experiments/nano_ofcp_nfsp_result_low_lr/'
+# log_dir = '/content/drive/MyDrive/msc_thesis/nano_ofcp_models/nfsp_low_lr/logs'
+log_dir = './ow_models/base'
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
 # Set up the model saving folder.
-save_dir = './models/nano_ofcp_nfsp_result_low_lr/'
+# save_dir = '/content/drive/MyDrive/msc_thesis/nano_ofcp_models/nfsp_low_lr/models'
+save_dir = './ow_models/base'
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 
@@ -54,10 +56,11 @@ for i in range(env.player_num):
                       rl_learning_rate=0.001,
                       evaluate_with='best_response')
     agents.append(agent)
-random_agent = RandomAgent(action_num=eval_env.action_num)
+random_agent = RandomAgent(action_num=eval_env_0.action_num)
 
 env.set_agents(agents)
-eval_env.set_agents([agents[0], random_agent])
+eval_env_0.set_agents([agents[0], random_agent])
+eval_env_1.set_agents([agents[1], random_agent])
 
 # Init a Logger to plot the learning curve
 logger = Logger(log_dir)
@@ -81,24 +84,29 @@ for episode in range(episode_num):
     # Evaluate the performance. Play with random agents.
     if episode % evaluate_every == 0:
     
-        tour_score = tournament(eval_env, evaluate_num)[0]
-        if tour_score > best_score:
+        tour_score_player_0_br = tournament(eval_env_0, evaluate_num)[0]
+        # tour_score_player_1_br = tournament(eval_env_1, evaluate_num)[0]
+        agents[0].evaluate_with = 'average_policy'
+        tour_score_player_0_ap = tournament(eval_env_0, evaluate_num)[0]
+        agents[0].evaluate_with = 'best_response'
+
+        if tour_score_player_0_br > best_score:
 
             state_dict = {}
             for agent in agents:
                 state_dict.update(agent.get_state_dict())
             torch.save(state_dict, os.path.join(save_dir, 'best_model.pth'))
-            best_score = tour_score
-            logger.log(str(env.timestep) + "  Saving best model. Accuracy: " + str(best_score))
+            best_score = tour_score_player_0_br
+            logger.log(str(env.timestep) + "  Saving best model. Score vs Random Agent: " + str(best_score))
 
-        logger.log_performance(env.timestep, tour_score)
-
+        logger.log_performance_using_env("Best Response", env.timestep, tour_score_player_0_br)
+        logger.log_performance_using_env("Average Policy", env.timestep, tour_score_player_0_ap)
 
 # Close files in the logger
 logger.close_files()
 
 # Plot the learning curve
-logger.plot('NFSP')
+logger.duel_plot('NFSP_BR', 'NFSP_AVG')
 
 # Save model
 state_dict = {}

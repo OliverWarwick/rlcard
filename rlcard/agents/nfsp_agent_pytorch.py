@@ -258,7 +258,7 @@ class NFSPAgent(object):
         Returns:
             loss (float): The average loss obtained on this batch of transitions or `None`.
         '''
-        print("Training SL Network of agent: {}".format(self._scope))
+        # print("Training SL Network of agent: {}".format(self._scope))
         if (len(self._reservoir_buffer) < self._batch_size or
                 len(self._reservoir_buffer) < self._min_buffer_size_to_learn):
             return None
