@@ -158,7 +158,7 @@ def plot_quad(csv_path, save_path, algorithm1, algorithm2, algorithm3, algorithm
         ax.plot(xs2, ys2, label=algorithm2)
         ax.plot(xs3, ys3, label=algorithm3)
         ax.plot(xs4, ys4, label=algorithm4)
-        ax.set(xlabel='timestep', ylabel='reward')
+        ax.set(xlabel='timestep', ylabel='rewards')
         ax.legend()
         ax.grid()
 
