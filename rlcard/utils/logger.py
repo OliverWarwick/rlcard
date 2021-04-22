@@ -67,6 +67,9 @@ class Logger(object):
 
     def duel_plot(self, algorithm1, algorithm2):
         plot_duel(self.csv_path, self.fig_path, algorithm1, algorithm2)
+    
+    def quad_plot(self, algorithm1, algorithm2, algorithm3, algorithm4):
+        plot_quad(self.csv_path, self.fig_path, algorithm1, algorithm2, algorithm3, algorithm4)
 
     def close_files(self):
         ''' Close the created file objects
@@ -120,6 +123,41 @@ def plot_duel(csv_path, save_path, algorithm1, algorithm2):
         fig, ax = plt.subplots()
         ax.plot(xs1, ys1, label=algorithm1)
         ax.plot(xs2, ys2, label=algorithm2)
+        ax.set(xlabel='timestep', ylabel='reward')
+        ax.legend()
+        ax.grid()
+
+        save_dir = os.path.dirname(save_path)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        fig.savefig(save_path)
+
+def plot_quad(csv_path, save_path, algorithm1, algorithm2, algorithm3, algorithm4):
+    import matplotlib.pyplot as plt
+    with open(csv_path) as csvfile:
+        print(csv_path)
+        reader = csv.DictReader(csvfile)
+        xs1, xs2, xs3, xs4 = [], [], [], []
+        ys1, ys2, ys3, ys4 = [], [], [], []
+        for index, row in enumerate(reader):
+            if index % 2 == 0:
+                xs1.append(int(row['timestep']))
+                ys1.append(float(row['reward']))
+            elif index % 2 == 1:
+                xs2.append(int(row['timestep']))
+                ys2.append(float(row['reward']))
+            elif index % 2 == 2:
+                xs3.append(int(row['timestep']))
+                ys3.append(float(row['reward']))
+            else:
+                xs4.append(int(row['timestep']))
+                ys4.append(float(row['reward']))
+        fig, ax = plt.subplots()
+        ax.plot(xs1, ys1, label=algorithm1)
+        ax.plot(xs2, ys2, label=algorithm2)
+        ax.plot(xs2, ys2, label=algorithm3)
+        ax.plot(xs2, ys2, label=algorithm4)
         ax.set(xlabel='timestep', ylabel='reward')
         ax.legend()
         ax.grid()
