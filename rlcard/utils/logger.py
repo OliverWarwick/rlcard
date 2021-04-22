@@ -141,13 +141,13 @@ def plot_quad(csv_path, save_path, algorithm1, algorithm2, algorithm3, algorithm
         xs1, xs2, xs3, xs4 = [], [], [], []
         ys1, ys2, ys3, ys4 = [], [], [], []
         for index, row in enumerate(reader):
-            if index % 2 == 0:
+            if index % 4 == 0:
                 xs1.append(int(row['timestep']))
                 ys1.append(float(row['reward']))
-            elif index % 2 == 1:
+            elif index % 4 == 1:
                 xs2.append(int(row['timestep']))
                 ys2.append(float(row['reward']))
-            elif index % 2 == 2:
+            elif index % 4 == 2:
                 xs3.append(int(row['timestep']))
                 ys3.append(float(row['reward']))
             else:
