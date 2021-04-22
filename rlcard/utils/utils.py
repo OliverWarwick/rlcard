@@ -329,16 +329,38 @@ def reorganize(trajectories, payoffs):
 
     for player in range(player_num):
         for i in range(0, len(trajectories[player])-2, 2):
+            # print("Traj player: ")
+            # print(trajectories[player])
+            # print("Index i to i+3")
+            # print(trajectories[player][i:i+3])
             if i ==len(trajectories[player])-3:
                 reward = payoffs[player]
-                done =True
+                done = True
+                action = trajectories[player][i:i+3][1][0]
+                possible = trajectories[player][i:i+3][1][1]
+                trajectories[player][i:i+3][1] = action
             else:
-                reward, done = 0, False
+                # print("Adding zero reward")
+                # print("Should be action: ")
+                # print(trajectories[player][i:i+3][1])
+                action = trajectories[player][i:i+3][1][0]
+                possible = trajectories[player][i:i+3][1][1]
+                if not possible:
+                    reward, done = -2, False
+                else:
+                    reward, done = 0, False
+                trajectories[player][i:i+3][1] = action
+                # print("Now action")
+                # print(trajectories[player][i:i+3][1][0])
+                # print("Reward: Should be: {} Actually: {}".format(-2 if not possible else 0, reward))
             transition = trajectories[player][i:i+3].copy()
             transition.insert(2, reward)
+            transition[1] = action
             transition.append(done)
 
             new_trajectories[player].append(transition)
+            # print("\n\nEnded Cycle:")
+            # print(transition)
     return new_trajectories
 
 def set_global_seed(seed):

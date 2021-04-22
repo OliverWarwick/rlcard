@@ -7,7 +7,7 @@ import rlcard
 from rlcard.envs import Env
 from rlcard.games.nano_ofcp import Game, ActionChoiceException
 from rlcard.games.nano_ofcp.ofcp_utils import STRING_TO_RANK
-from rlcard.agents import RandomAgent, NanoOFCPPerfectInfoAgent
+from rlcard.agents import RandomAgent, NanoOFCPPerfectInfoAgent, DQNAgentPytorch as DQNAgent
 from rlcard.utils import *
 
 DEFAULT_GAME_CONFIG = {
@@ -44,7 +44,80 @@ class NanoOFCPEnv(Env):
         self.game = Game()
         super().__init__(config)
         self.actions = [['D', 'F', 'F'], ['D', 'F', 'B'], ['D', 'B', 'F'], ['D', 'B', 'B'], ['F', 'D', 'F'], ['F', 'D', 'B'], ['B', 'D', 'F'], ['B', 'D', 'B'], ['F', 'F', 'D'], ['F', 'B', 'D'], ['B', 'F', 'D'], ['B', 'B', 'D']]
-        self.state_shape = 6 * 3 * 6 # Each row is 3 cards and their are 6 of these. For each of the cards we have a 6 element one hot encoding.
+        self.state_shape = 6 * 3 * 6 # Each row is 3 cards and their are 6 of these. For each of the cards we have a 6 element one hot encoding .
+
+    def run(self, is_training=False):
+        '''
+        Run a complete game, either for evaluation or training RL agent.
+
+        Args:
+            is_training (boolean): True if for training purpose.
+
+        Returns:
+            (tuple) Tuple containing:
+            (list): A list of trajectories generated from the environment.
+            (list): A list payoffs. Each entry corresponds to one player.
+
+        Note: The trajectories are 3-dimension list. The first dimension is for different players.
+              The second dimension is for different transitions. The third dimension is for the contents of each transiton
+        '''
+        if self.single_agent_mode:
+            raise ValueError('Run in single agent not allowed.')
+
+        trajectories = [[] for _ in range(self.player_num)]
+        state, player_id = self.reset()
+
+        # Loop to play the game
+        trajectories[player_id].append(state)
+        while not self.is_over():
+            # Agent plays
+            if not is_training:
+                action, _ = self.agents[player_id].eval_step(state)
+                true_action = None
+            else:
+                if isinstance(self.agents[player_id], DQNAgent):
+                    action, true_action = self.agents[player_id].step_with_safety(state)
+                else:
+                    action = self.agents[player_id].step(state)
+                    true_action = None
+
+            # Environment steps
+            next_state, next_player_id = self.step(action, self.agents[player_id].use_raw)
+            # Use the action if it is safe, otherwise
+            # Save action
+            if true_action is None:
+                trajectories[player_id].append([action, True])
+            else:
+                trajectories[player_id].append([true_action, False])  # EDIT.
+
+            # Set the state and player
+            state = next_state
+            player_id = next_player_id
+
+            # Save state.
+            if not self.game.is_over():
+                trajectories[player_id].append(state)
+            
+            # trajectories[player_id].append(true_action)
+
+        # Add a final state to all the players
+        for player_id in range(self.player_num):
+            state = self.get_state(player_id)
+            trajectories[player_id].append(state)
+
+
+        # print("Traj before adding payoffs")
+        # print(trajectories)
+
+        # Payoffs
+        payoffs = self.get_payoffs()
+        # print(payoffs)
+
+        # Reorganize the trajectories
+        trajectories = reorganize(trajectories, payoffs)
+
+        return trajectories, payoffs
+
 
     def heuristic_agent_run(self, is_training=False):
         '''

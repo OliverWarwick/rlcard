@@ -152,6 +152,25 @@ class DQNAgent(object):
         action = np.random.choice(np.arange(len(A)), p=A)
         return action
 
+    # Extra function for returning what was the optimal move and if illegal also the sampled safe move.
+
+    def step_with_safety(self, state):
+
+        A = self.predict(state['obs'])
+        # A = remove_illegal(A, state['legal_actions'])
+        # print("Final A values: {}".format(A))
+        true_action = np.random.choice(np.arange(len(A)), p=A)
+        if true_action not in state['legal_actions']:
+            # Store this but find safe action.
+            A = remove_illegal(A, state['legal_actions'])
+            safe_action = np.random.choice(np.arange(len(A)), p=A)
+        else:
+            safe_action = deepcopy(true_action)
+            true_action = None
+
+        return (safe_action, true_action)
+
+
     def eval_step(self, state):
         ''' Predict the action for evaluation purpose.
 

@@ -77,6 +77,7 @@ class VecEnv(object):
                     action, _ = self.agents[player_ids[i]].eval_step(states[i])
                 else:
                     action = self.agents[player_ids[i]].step(states[i])
+
                 commands.append((opt, action))
                 actions.append(action)
 
@@ -120,6 +121,7 @@ class VecEnv(object):
 
             self.timestep += active_num
             active_num -= len(finished)
+            num_rounds += 1
 
         # Payoffs
         payoffs = send_command_to_all(self.remotes, ('get_payoffs', None))

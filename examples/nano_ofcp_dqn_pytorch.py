@@ -11,7 +11,7 @@ from rlcard.utils import Logger
 
 def training_run(evaluate_every = 1000, 
                 evaluate_num = 2500, 
-                episode_num = 5000, 
+                episode_num = 25000, 
                 memory_init_size = 1000, 
                 train_every = 1, 
                 log_dir = None,
@@ -71,6 +71,7 @@ def training_run(evaluate_every = 1000,
 
         # Feed transitions into agent memory, and train the agent
         for ts in trajectories[0]:
+            # OW ADDITION - SETTING REWARD TO BE -2 IF ILLEGAL.
             agent.feed(ts)
 
         # Evaluate the performance. Play with random agents.
