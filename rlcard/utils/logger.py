@@ -57,7 +57,7 @@ class Logger(object):
         self.writer.writerow({'timestep': timestep,'reward': reward})
         print('')
         self.log('----------------------------------------')
-        self.log('  style        |  ' + env)
+        self.log('  style        |  ' + str(env))
         self.log('  timestep     |  ' + str(timestep))
         self.log('  reward       |  ' + str(reward))
         self.log('----------------------------------------')
