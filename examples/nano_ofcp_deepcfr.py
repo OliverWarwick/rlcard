@@ -15,15 +15,15 @@ env = rlcard.make('nano_ofcp', config={'seed': 0, 'allow_step_back':True})
 eval_env = rlcard.make('nano_ofcp', config={'seed': 0})
 
 # Set the iterations numbers and how frequently we evaluate the performance
-evaluate_every = 1
-evaluate_num = 1000
-episode_num = 1
+evaluate_every = 10
+evaluate_num = 2500
+episode_num = 500
 
 # The intial memory size
 memory_init_size = 1000
 
 # Train the agent every X steps
-train_every = 64
+train_every = 1
 
 # The paths for saving the logs and learning curves
 log_dir = './experiments/nano_ofcp_deepcfr_result/'
@@ -39,7 +39,10 @@ with tf.Session() as sess:
     # Set up the agents
     agents = []
     for i in range(env.player_num):
-        agent = DeepCFR(sess, scope='deepcfr'+str(i), env=env)
+        agent = DeepCFR(sess, scope='deepcfr'+str(i), 
+                        env=env,
+                        num_traversals=1,
+                        num_step=5)
         agents.append(agent)
     random_agent = RandomAgent(action_num=eval_env.action_num)
 

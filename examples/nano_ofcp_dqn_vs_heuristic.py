@@ -17,9 +17,9 @@ eval_env_random = rlcard.make('nano_ofcp', config={'seed': 0})
 eval_env_heur = rlcard.make('nano_ofcp', config={'seed': 0})
 
 # Set the iterations numbers and how frequently we evaluate performance
-evaluate_every = 1000
+evaluate_every = 2500
 evaluate_num = 2500
-episode_num = 20000
+episode_num = 5000
 
 # The intial memory size
 memory_init_size = 1000
@@ -48,16 +48,16 @@ agent_1 = DQNAgent(scope='dqn',
                 replay_memory_init_size=memory_init_size,
                 train_every=train_every,
                 state_shape=env.state_shape,
-                mlp_layers=[128, 128],
+                mlp_layers=[128],
                 device=torch.device('cpu'),
                 epsilon_decay_steps=episode_num * 3,
-                epsilon_start=0.9,
+                epsilon_start=0.25,
                 epsilon_end=0.05,
-                learning_rate=10e-4, 
-                update_target_estimator_every=2000,
+                learning_rate=10e-3, 
+                update_target_estimator_every=1000,
                 discount_factor=1.0)
 
-h_agent = NanoOFCPPerfectInfoAgent(action_num=env.action_num, use_raw=False, alpha=1)
+h_agent = NanoOFCPPerfectInfoAgent(action_num=env.action_num, use_raw=False, alpha=0.5)
 r_agent = RandomAgent(action_num=env.action_num)
 env.set_agents([agent_1, h_agent])
 eval_env_random.set_agents([agent_1, r_agent])
@@ -88,16 +88,16 @@ for episode in range(episode_num):
 
     # Evaluate the performance. Play with random agents.
     if episode % evaluate_every == 0:
-        print("Epsilon Value: {}".format(agent_1.epsilons[min(agent_1.total_t, agent_1.epsilon_decay_steps-1)]))
-        logger.log_performance_using_env(env.timestep, "Heuristic", heuristic_agent_tournament(eval_env_heur, evaluate_num)[0])
-        logger.log_performance_using_env(env.timestep, "Random", heuristic_agent_tournament(eval_env_random, evaluate_num)[0])
+        # print("Epsilon Value: {}".format(agent_1.epsilons[min(agent_1.total_t, agent_1.epsilon_decay_steps-1)]))
+        logger.log_performance_using_algo('Heuristic', env.timestep,  heuristic_agent_tournament(eval_env_heur, evaluate_num)[0])
+        logger.log_performance_using_algo("Random", env.timestep, heuristic_agent_tournament(eval_env_random, evaluate_num)[0])
 
 
 # Close files in the logger
 logger.close_files()
 
 # Plot the learning curve
-logger.plot('nano_ofcp')
+logger.duel_plot('vs Heuistic', 'vs Random')
 
 # Save model
 state_dict = agent_1.get_state_dict()

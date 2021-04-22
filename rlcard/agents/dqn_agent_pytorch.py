@@ -409,11 +409,11 @@ class EstimatorNetwork(nn.Module):
         fc = [nn.Flatten()]
         fc.append(nn.BatchNorm1d(layer_dims[0]))
         for i in range(len(layer_dims)-1):
-            lin_layer = nn.Linear(layer_dims[i], layer_dims[i+1], bias=True)
+            lin_layer = nn.Linear(layer_dims[i], layer_dims[i+1], bias=False)
             if self.verbose: lin_layer.register_backward_hook(hook_fn)
             fc.append(lin_layer)
             fc.append(nn.Tanh())
-        fc.append(nn.Linear(layer_dims[-1], self.action_num, bias=True))
+        fc.append(nn.Linear(layer_dims[-1], self.action_num, bias=False))
         self.fc_layers = nn.Sequential(*fc)
 
     def forward(self, s):

@@ -45,15 +45,16 @@ for i in range(env.player_num):
     agent = NFSPAgent(scope='nfsp' + str(i),
                       action_num=env.action_num,
                       state_shape=env.state_shape,
-                      hidden_layers_sizes=[128],
+                      hidden_layers_sizes=[64, 64],
                       min_buffer_size_to_learn=memory_init_size,
                       q_replay_memory_init_size=memory_init_size,
                       train_every=train_every,
                       q_train_every=train_every,
-                      q_mlp_layers=[128],
+                      q_mlp_layers=[64, 64],
                       q_discount_factor=1.0,
+                      q_epsilon_start=0.25,
                       device=torch.device('cpu'),
-                      rl_learning_rate=0.001,
+                      rl_learning_rate=0.005,
                       evaluate_with='best_response')
     agents.append(agent)
 random_agent = RandomAgent(action_num=eval_env_0.action_num)
