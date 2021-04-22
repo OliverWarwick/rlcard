@@ -58,7 +58,7 @@ class NFSPAgent(object):
                  q_replay_memory_init_size=1000,
                  q_update_target_estimator_every=1000,
                  q_discount_factor=0.99,
-                 q_epsilon_start=0.5,  # Changed from 0.06
+                 q_epsilon_start=0.1,  # Changed from 0.06
                  q_epsilon_end=0,
                  q_epsilon_decay_steps=int(1e6),
                  q_batch_size=256,
@@ -158,6 +158,8 @@ class NFSPAgent(object):
         '''
         self._rl_agent.feed(ts)
         self.total_t += 1
+        # print("Total T: {}, Len Reservoir Buffer: {}, Min Size: {}, T / Train: {}".format(self.total_t, len(self._reservoir_buffer), self._min_buffer_size_to_learn, self.total_t%self._train_every == 0))
+
         if self.total_t>0 and len(self._reservoir_buffer) >= self._min_buffer_size_to_learn and self.total_t%self._train_every == 0:
             sl_loss  = self.train_sl()
             print('\rINFO - Agent {}, step {}, sl-loss: {}'.format(self._scope, self.total_t, sl_loss), end='')
@@ -256,6 +258,7 @@ class NFSPAgent(object):
         Returns:
             loss (float): The average loss obtained on this batch of transitions or `None`.
         '''
+        print("Training SL Network of agent: {}".format(self._scope))
         if (len(self._reservoir_buffer) < self._batch_size or
                 len(self._reservoir_buffer) < self._min_buffer_size_to_learn):
             return None
