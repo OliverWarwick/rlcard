@@ -161,7 +161,7 @@ class NFSPAgent(object):
         # print("Total T: {}, Len Reservoir Buffer: {}, Min Size: {}, T / Train: {}".format(self.total_t, len(self._reservoir_buffer), self._min_buffer_size_to_learn, self.total_t%self._train_every == 0))
 
         if self.total_t>0 and len(self._reservoir_buffer) >= self._min_buffer_size_to_learn and self.total_t%self._train_every == 0:
-            for _ in in range(4): 
+            for _ in range(4): 
                 sl_loss  = self.train_sl()
                 print('\rINFO - Agent {}, step {}, sl-loss: {}'.format(self._scope, self.total_t, sl_loss), end='')
 
