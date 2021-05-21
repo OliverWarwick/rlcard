@@ -14,7 +14,6 @@ if 'tensorflow' in installed_packages:
     from rlcard.agents.dqn_agent import DQNAgent
     from rlcard.agents.nfsp_agent import NFSPAgent
 if 'torch' in installed_packages:
-    print("Importing DQN agent.")
     from rlcard.agents.dqn_agent_pytorch import DQNAgent as DQNAgentPytorch
     from rlcard.agents.nfsp_agent_pytorch import NFSPAgent as NFSPAgentPytorch
 
@@ -27,3 +26,4 @@ from rlcard.agents.random_agent import RandomAgent
 from rlcard.agents.uno_human_agent import HumanAgent as UnoHumanAgent
 from rlcard.agents.nano_ofcp_human_agent import HumanAgent as NanoOFCPHumanAgent
 from rlcard.agents.nano_ofcp_perfect_info_agent import PerfectInfoAgent as NanoOFCPPerfectInfoAgent
+from rlcard.agents.nano_ofcp_monte_carlo_agent import MCAgent as MonteCarloAgent
