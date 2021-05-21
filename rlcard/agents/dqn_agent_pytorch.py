@@ -362,12 +362,13 @@ class Estimator(object):
 
         # (batch, state_shape) -> (batch, action_num)
         q_as = self.qnet(s)
-        if self.verbose: print("Q Actions From Network: {}".format(q_as))
+        print("\nQ Action Values From Network: \n{}".format(q_as[0].data.numpy()))
 
         # (batch, action_num) -> (batch, )
         Q = torch.gather(q_as, dim=-1, index=a.unsqueeze(-1)).squeeze(-1)
-        if self.verbose: print("Q unwrapped: {}".format(Q))
-        if self.verbose: print("Y: {}".format(y))
+        print("\nAction sampled: {}".format(a[0]))
+        print("Q Value: {}".format(Q[0]))
+        print("Target Value: {}".format(y[0]))
         Q.retain_grad()
 
         # update model
@@ -381,6 +382,9 @@ class Estimator(object):
 
         self.qnet.eval()
 
+        q_as_fresh = self.qnet(s)
+        print("\nQ Action Values From Network After Update: \n{}".format(q_as_fresh[0].data.numpy()))
+        print()
         return batch_loss
 
 
@@ -413,7 +417,10 @@ class EstimatorNetwork(nn.Module):
             if self.verbose: lin_layer.register_backward_hook(hook_fn)
             fc.append(lin_layer)
             fc.append(nn.Tanh())
-        fc.append(nn.Linear(layer_dims[-1], self.action_num, bias=False))
+        fc.append(nn.Linear(layer_dims[-1], self.action_num, bias=True))
+        print("Bias terms before: {}".format(fc[-1].bias))
+        fc[-1].bias.data.fill_(2) 
+        print("Bias terms after: {}".format(fc[-1].bias))
         self.fc_layers = nn.Sequential(*fc)
 
     def forward(self, s):
