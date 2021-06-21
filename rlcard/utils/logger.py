@@ -5,7 +5,7 @@ class Logger(object):
     ''' Logger saves the running results and helps make plots from the results
     '''
 
-    def __init__(self, log_dir):
+    def __init__(self, log_dir, fieldnames=['timestep', 'reward'], csv_name='performance.csv'):
         ''' Initialize the labels, legend and paths of the plot and log file.
 
         Args:
@@ -13,7 +13,7 @@ class Logger(object):
         '''
         self.log_dir = log_dir
         self.txt_path = os.path.join(log_dir, 'log.txt')
-        self.csv_path = os.path.join(log_dir, 'performance.csv')
+        self.csv_path = os.path.join(log_dir, csv_name)
         self.fig_path = os.path.join(log_dir, 'fig.png')
 
         if not os.path.exists(log_dir):
@@ -21,7 +21,6 @@ class Logger(object):
 
         self.txt_file = open(self.txt_path, 'w')
         self.csv_file = open(self.csv_path, 'w')
-        fieldnames = ['timestep', 'reward']
         self.writer = csv.DictWriter(self.csv_file, fieldnames=fieldnames)
         self.writer.writeheader()
 
@@ -61,6 +60,21 @@ class Logger(object):
         self.log('  timestep     |  ' + str(timestep))
         self.log('  reward       |  ' + str(reward))
         self.log('----------------------------------------')
+    
+    def log_q_value_diffs(self, decision_points, q_value_diffs):
+        ''' Log the avg differenece in q values between for a model between
+        those given by the network, and the sampled values under the same policies 
+        Args:
+            decision_points List[Int]: points within the game
+            q_value_diffs: List[Float]: differences in q values  
+        '''
+        for i in range(len(decision_points)):
+            self.writer.writerow({'decision point': decision_points[i],'q value difference': q_value_diffs[i]})
+            self.log('----------------------------------------')
+            self.log('  decision point   |  ' + str(decision_points[i]))
+            self.log('  q value diff     |  ' + str(q_value_diffs[i]))
+            self.log('----------------------------------------')
+
 
     def plot(self, algorithm):
         plot(self.csv_path, self.fig_path, algorithm)

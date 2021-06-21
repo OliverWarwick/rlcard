@@ -8,14 +8,16 @@ from rlcard.agents import DQNAgentPytorch as DQNAgent
 from rlcard.agents import RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
+from examples.nano_ofcp_q_value_approx import eval_q_value_approx
 
 def training_run(evaluate_every = 1000, 
                 evaluate_num = 1000, 
-                episode_num = 50000, 
+                episode_num = 5000, 
                 memory_init_size = 500, 
                 train_every = 1000, 
                 log_dir = None,
-                save_dir = None):
+                save_dir = None,
+                random_seed = 0):
 
     # Make environment
     env = rlcard.make('nano_ofcp', config={'seed': 0})
@@ -34,7 +36,7 @@ def training_run(evaluate_every = 1000,
         os.makedirs(save_dir)
 
     # Set a global seed
-    set_global_seed(0)
+    set_global_seed(random_seed)
 
     agent = DQNAgent(scope='dqn',
                     action_num=env.action_num,
@@ -55,8 +57,9 @@ def training_run(evaluate_every = 1000,
     env.set_agents([agent, random_agent])
     eval_env.set_agents([agent, random_agent])
 
-    # Init a Logger to plot the learning curve
-    logger = Logger(log_dir)
+    # Init a Logger to plot the learning curve, and use the name of the model so we can 
+    # later plot these.
+    logger = Logger(log_dir, csv_name="dqn.csv")
 
     # Display infomation about the agents networks.
     # print("Agents network shape: {}".format(agent.q_estimator.qnet))
@@ -93,10 +96,17 @@ def training_run(evaluate_every = 1000,
     logger.plot('DQN')
 
     # Save model
-
     state_dict = agent.get_state_dict()
-    print(state_dict.keys())
     torch.save(state_dict, os.path.join(save_dir, 'model.pth'))
 
+    # Once model is saved, we can then test again to see how close the q values are to those 
+    # which we sample from chosen games.
+    q_value_log_dir = log_dir + 'q_values_logs/'
+    mean_q_value_diffs = eval_q_value_approx(agent, random_agent, sample_size=20, num_rollouts=10, log_dir=q_value_log_dir)
+
+
+
 if __name__ == '__main__':
-    training_run()
+    for i in range(0,3):
+        training_run(log_dir = f".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run{i}/logs/", 
+        save_dir = f".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run{i}/model/", random_seed=i*100)

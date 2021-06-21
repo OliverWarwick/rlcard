@@ -12,8 +12,7 @@ from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
 
 
-
-def eval_q_value_approx(agent_1, agent_2, sample_size, num_rollouts):
+def eval_q_value_approx(agent_1, agent_2, sample_size, num_rollouts, log_dir=None):
 
     """
     Given a set of agents we create an enviroment and simulate the agents strategy over a series of 
@@ -26,7 +25,8 @@ def eval_q_value_approx(agent_1, agent_2, sample_size, num_rollouts):
     num_rollouts: Int. How many rollouts should we use per possition under the policies.
     
     Returns:
-
+    List[Floats] - this contains the q_value difference at each decision point of the game, avg over that
+    decision point. So in TinyOFCP we have 3 decision points e.g: [-0.6, +0.4, -0.1]
 
     """
 
@@ -35,8 +35,9 @@ def eval_q_value_approx(agent_1, agent_2, sample_size, num_rollouts):
     env.set_agents([agent_1, agent_2])
 
     # Create a logger
-    log_dir = '.ow_model/experiments/nano_ofcp_dqn_q_approx/'
-    logger = Logger(log_dir)
+    if log_dir is None:
+        log_dir = '.ow_model/experiments/nano_ofcp_dqn_q_approx/'
+    logger = Logger(log_dir, fieldnames=['decision point', 'q value difference'], csv_name='q_values_diffs.csv')
 
     # Need to set the global seed in order for this to be the same experiment each time.
     set_global_seed(0)
@@ -45,20 +46,16 @@ def eval_q_value_approx(agent_1, agent_2, sample_size, num_rollouts):
     # TODO: Speed this up through multi processesing, very independent tasks.
     # Currently 206 seconds for (100, 100) run.
 
-
     for episode in range(sample_size):
 
         # Generate data from the environment this function returns a list with 3 elements which is the q value differences over the roll outs done. 
         q_values_diffs.append(roll_out_single_game(env, num_rollouts))
 
-    mean_q_value_differences = np.mean(np.array(q_values_diffs), axis=0)
-    print(mean_q_value_differences)
+    mean_q_value_differences = np.around(np.mean(np.array(q_values_diffs), axis=0), decimals=5)
+    logger.log_q_value_diffs([1,2,3], mean_q_value_differences)
 
-    # logger.log(str(mean_q_value_differences))
-
-
-
-
+    return mean_q_value_differences
+    
 
 
 
@@ -138,7 +135,9 @@ if __name__ == "__main__":
                         epsilon_end = 0.0,
                         epsilon_decay_steps= 1
                         )
+
     agent_2 = RandomAgent(action_num=env.action_num)
+
     # agent_2 = DQNAgent(scope='dqn',
     #                     action_num=env.action_num,
     #                     state_shape=env.state_shape,
@@ -153,16 +152,7 @@ if __name__ == "__main__":
     agent_1.load(checkpoint)
     # agent_2.load(checkpoint)
 
-    for x in [10, 100, 1000]:
-        for y in [10, 100, 1000]:
 
-            start_time = time.time()
-            eval_q_value_approx(agent_1, agent_2, sample_size=x, num_rollouts=y)
-            print("Sample Size: {}, Roll Outs: {}, Time: {}".format(x, y, time.time() - start_time))
-
-    # eval_q_value_approx(agent_1, agent_2, sample_size=x, num_rollouts=y)
-    
-
-
-
-
+    # start_time = time.time()
+    q_value_by_decision_point = eval_q_value_approx(agent_1, agent_2, sample_size=10, num_rollouts=100)
+  
