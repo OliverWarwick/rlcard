@@ -6,7 +6,7 @@ Termial based GUI for playing against an agent. Should be useful for debugging a
 
 import rlcard
 import torch
-from rlcard.agents import DQNAgentPytorch as DQNAgent
+from rlcard.agents import DQNAgentPytorch as DQNAgent, DQNAgentPytorchNeg as DQNAgentNeg
 from rlcard.agents import NanoOFCPHumanAgent as HumanAgent
 from rlcard.utils.utils import print_card
 from nano_ofcp_dqn_pytorch_load_model import env_load_dqn_agent_and_random_agent
@@ -18,7 +18,7 @@ DISCARD_PILE = 3
 OPPO_FRONT_ROW = 0
 OPPO_BACK_ROW = 1
 
-agent_path = ".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run0/model/best_model.pth"
+agent_path = "ow_model/experiments/nano_ofcp_dqn_neg/run0/model/best_model.pth"
 
 # Make environment and enable human mode
 # Set 'record_action' to True because we need it to print results
@@ -26,7 +26,7 @@ player_num = 2
 env = rlcard.make('nano_ofcp', config={'record_action': True, 'game_player_num': player_num})
 
 human_agent = HumanAgent(env.action_num)
-dqn_agent = DQNAgent(scope='dqn',
+dqn_agent = DQNAgentNeg(scope='dqn',
                         action_num=env.action_num,
                         state_shape=env.state_shape,
                         mlp_layers=[64, 64],
