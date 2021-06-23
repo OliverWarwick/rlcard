@@ -7,6 +7,8 @@ import numpy as np
 import time
 
 from rlcard.agents import DQNAgentPytorch as DQNAgent
+from rlcard.agents import NFSPAgentPytorch as NFSPAgent
+from rlcard.agents import DQNAgentPytorchNeg as DQNAgentNeg
 from rlcard.agents import RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
@@ -37,7 +39,7 @@ def eval_q_value_approx(agent_1, agent_2, sample_size, num_rollouts, log_dir=Non
     # Create a logger
     if log_dir is None:
         log_dir = '.ow_model/experiments/nano_ofcp_dqn_q_approx/'
-    logger = Logger(log_dir, fieldnames=['decision point', 'q value difference'], csv_name='q_values_diffs.csv')
+    logger = Logger(log_dir, fieldnames=['decision point', 'q value difference'], csv_name='q_values_diffs_v2.csv')
 
     # Need to set the global seed in order for this to be the same experiment each time.
     set_global_seed(0)
@@ -73,8 +75,17 @@ def roll_out_single_game(env, num_rollouts):
         if player_id == 0:
             # print("\n\n\n\n\nQ agent move counter: {}".format(q_agent_move_number))
             # Get the raw q values and then also the action from the agent, this action will not change so we can save for later.
-            raw_q_values, _ = env.agents[player_id].raw_q_values(state)
-            original_action, _ = env.agents[player_id].eval_step(state)
+            # TODO: Only supports DQN and NFSP at the moment.
+            if(isinstance(env.agents[0], DQNAgent) or isinstance(env.agents[0], DQNAgentNeg)):
+                raw_q_values, _ = env.agents[0].raw_q_values(state)
+            elif(isinstance(env.agents[0], NFSPAgent)):
+                if(env.agents[0].evaluate_with == 'best_response'):
+                    raw_q_values, _ = env.agents[0]._rl_agent.raw_q_values(state)
+                else:
+                    raise Exception("Not valid with avg policy as this just generates probabilities rather than q values.")
+            else:
+                raise Exception("Not valid agent for taking q values of.")
+            original_action, _ = env.agents[0].eval_step(state)
             original_q_value = raw_q_values[original_action]
             # print("Original Q Value: {}".format(original_q_value))
             # print("Original State {}, Orginal Action: {}".format(state, original_action))

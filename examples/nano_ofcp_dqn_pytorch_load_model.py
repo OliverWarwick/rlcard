@@ -12,24 +12,25 @@ import matplotlib.pyplot as plt
 
 
 def env_load_dqn_agent_and_random_agent(agent_path=None, 
-                                       trainable=False):
+                                       trainable=False, 
+                                       random_seed=random_seed):
 
     # Make environment
-    env = rlcard.make('nano_ofcp', config={'seed': 0, 'allow_step_back':True})
+    env = rlcard.make('nano_ofcp', config={'seed': random_seed, 'allow_step_back':True})
 
     if trainable:
         # Load up the class of the DQN agent, and then we can populate with the weights from the checkpoint.
         agent = DQNAgent(scope='dqn',
                         action_num=env.action_num,
                         state_shape=env.state_shape,
-                        mlp_layers=[128, 128],
+                        mlp_layers=[64, 64],
                         device=torch.device('cpu')
                         )
     else:
         agent = DQNAgent(scope='dqn',
                         action_num=env.action_num,
                         state_shape=env.state_shape,
-                        mlp_layers=[128, 128],
+                        mlp_layers=[64, 64],
                         device=torch.device('cpu'), 
                         epsilon_start = 0.0,
                         epsilon_end = 0.0,
@@ -37,7 +38,6 @@ def env_load_dqn_agent_and_random_agent(agent_path=None,
                         )
 
     random_agent = RandomAgent(action_num=env.action_num)
-
     # We have a pretrained model here. Change the path for your model.
     # check_point_path = os.path.join('rlcard/examples/models/nano_dqn_pytorch/model.pth')
 

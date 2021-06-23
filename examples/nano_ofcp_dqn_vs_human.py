@@ -18,7 +18,7 @@ DISCARD_PILE = 3
 OPPO_FRONT_ROW = 0
 OPPO_BACK_ROW = 1
 
-agent_path = '/Users/student/rlcard/examples/ow_models/nano_ofcp_dqn_vs_heur/model.pth'
+agent_path = ".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run0/model/best_model.pth"
 
 # Make environment and enable human mode
 # Set 'record_action' to True because we need it to print results
@@ -29,7 +29,7 @@ human_agent = HumanAgent(env.action_num)
 dqn_agent = DQNAgent(scope='dqn',
                         action_num=env.action_num,
                         state_shape=env.state_shape,
-                        mlp_layers=[128, 128],
+                        mlp_layers=[64, 64],
                         device=torch.device('cpu'), 
                         epsilon_start = 0.0,
                         epsilon_end = 0.0,

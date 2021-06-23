@@ -27,3 +27,4 @@ from rlcard.agents.uno_human_agent import HumanAgent as UnoHumanAgent
 from rlcard.agents.nano_ofcp_human_agent import HumanAgent as NanoOFCPHumanAgent
 from rlcard.agents.nano_ofcp_perfect_info_agent import PerfectInfoAgent as NanoOFCPPerfectInfoAgent
 from rlcard.agents.nano_ofcp_monte_carlo_agent import MCAgent as MonteCarloAgent
+from rlcard.agents.dqn_agent_pytorch_neg_rewards import DQNAgentNeg as DQNAgentPytorchNeg

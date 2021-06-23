@@ -8,10 +8,12 @@ from rlcard.agents import NFSPAgentPytorch as NFSPAgent
 from rlcard.agents import RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
+from examples.nano_ofcp_q_value_approx import eval_q_value_approx
+
 
 def training_run(evaluate_every = 1000, 
-                evaluate_num = 1000, 
-                episode_num = 2000, 
+                evaluate_num = 2500, 
+                episode_num = 25000, 
                 log_dir = None,
                 save_dir = None,
                 random_seed = 0):
@@ -57,15 +59,17 @@ def training_run(evaluate_every = 1000,
                         action_num=env.action_num,
                         state_shape=env.state_shape,
                         hidden_layers_sizes=[64, 64],
+                        anticipatory_param=0.25,
                         min_buffer_size_to_learn=memory_init_size,
                         q_replay_memory_init_size=memory_init_size,
                         train_every=train_every,
                         q_train_every=train_every,
                         q_mlp_layers=[64, 64],
                         q_discount_factor=1.0,
-                        q_epsilon_start=0.25,
+                        q_epsilon_start=0.5,
                         device=torch.device('cpu'),
-                        rl_learning_rate=0.005,
+                        rl_learning_rate=0.00005,
+                        batch_size=32,
                         evaluate_with='best_response')
         agents.append(agent)
     random_agent = RandomAgent(action_num=eval_env_0.action_num)
@@ -149,6 +153,12 @@ def training_run(evaluate_every = 1000,
     for agent in agents:
         state_dict.update(agent.get_state_dict())
     torch.save(state_dict, os.path.join(save_dir, 'model.pth'))
+
+    agents[0].evaluate_with = 'best_response'
+    agents[1].evaluate_with = 'best_response'
+    for i, log in enumerate(['best_response/player0/', 'best_response/player1/']):
+        q_log_dir = log_dir + log + 'q_values_logs/'
+        mean_q_value_diffs = eval_q_value_approx(agents[i], random_agent, sample_size=20, num_rollouts=100, log_dir=q_log_dir)
 
 
 if __name__ == '__main__':

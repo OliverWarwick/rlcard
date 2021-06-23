@@ -4,7 +4,7 @@ import torch
 import os
 
 import rlcard
-from rlcard.agents import DQNAgentPytorch as DQNAgent
+from rlcard.agents import DQNAgentPytorchNeg as DQNAgentNeg
 from rlcard.agents import RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
@@ -38,7 +38,7 @@ def training_run(evaluate_every = 1000,
     # Set a global seed
     set_global_seed(random_seed)
 
-    agent = DQNAgent(scope='dqn',
+    agent = DQNAgentNeg(scope='dqn',
                     action_num=env.action_num,
                     replay_memory_init_size=memory_init_size,
                     train_every=train_every,
@@ -52,14 +52,15 @@ def training_run(evaluate_every = 1000,
                     update_target_estimator_every=evaluate_every,
                     verbose=False, 
                     batch_size=32,
-                    discount_factor=1.0)
+                    discount_factor=1.0,
+                    max_neg_reward=-2)
     random_agent = RandomAgent(action_num=eval_env.action_num)
     env.set_agents([agent, random_agent])
     eval_env.set_agents([agent, random_agent])
 
     # Init a Logger to plot the learning curve, and use the name of the model so we can 
     # later plot these.
-    logger = Logger(log_dir, csv_name="dqn.csv")
+    logger = Logger(log_dir, csv_name="dqn_adj_illegal.csv")
 
     # Display infomation about the agents networks.
     # print("Agents network shape: {}".format(agent.q_estimator.qnet))
@@ -109,15 +110,16 @@ def training_run(evaluate_every = 1000,
 
 if __name__ == '__main__':
     for i in range(0,5):
-        # training_run(log_dir = f".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run{i}/logs/", 
-        # save_dir = f".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run{i}/model/", random_seed=i*100)
+        # training_run(log_dir = f".ow_model/experiments/nano_ofcp_dqn_neg/run{i}/logs/", 
+        # save_dir = f".ow_model/experiments/nano_ofcp_dqn_neg/run{i}/model/", random_seed=i*100)
+
         random_seed = i * 100
 
-        log_dir = f".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run{i}/logs/"
-        save_dir = f".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run{i}/model/"
+        log_dir = f".ow_model/experiments/nano_ofcp_dqn_neg/run{i}/logs/"
+        save_dir = f".ow_model/experiments/nano_ofcp_dqn_neg/run{i}/model/"
         # env = env_load_dqn_agent_and_random_agent(agent_path = save_dir + "best_model.pth", trainable=False, random_seed=random_seed)
         
-        agent = DQNAgent(scope='dqn',
+        agent = DQNAgentNeg(scope='dqn',
                         action_num=12,
                         state_shape=108,
                         mlp_layers=[64, 64],
@@ -134,5 +136,3 @@ if __name__ == '__main__':
 
         print("Starting : {i}")
         mean_q_value_diffs = eval_q_value_approx(agent, random_agent, sample_size=100, num_rollouts=100, log_dir=q_value_log_dir)
-
-

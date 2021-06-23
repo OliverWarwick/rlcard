@@ -41,7 +41,7 @@ with tf.Session() as sess:
     for i in range(env.player_num):
         agent = DeepCFR(sess, scope='deepcfr'+str(i), 
                         env=env,
-                        num_traversals=1,
+                        num_traversals=5,
                         num_step=5)
         agents.append(agent)
     random_agent = RandomAgent(action_num=eval_env.action_num)
