@@ -4,7 +4,7 @@ import os
 import torch
 
 import rlcard
-from rlcard.agents.dqn_agent_pytorch import DQNAgent
+from rlcard.agents import DQNAgentPytorch as DQNAgent, DQNAgentPytorchNeg as DQNAgentNeg
 from rlcard.agents.random_agent import RandomAgent
 from rlcard.utils.utils import set_global_seed, tournament
 
@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 
 def env_load_dqn_agent_and_random_agent(agent_path=None, 
                                        trainable=False, 
-                                       random_seed=random_seed):
+                                       neg=False):
 
     # Make environment
-    env = rlcard.make('nano_ofcp', config={'seed': random_seed, 'allow_step_back':True})
+    env = rlcard.make('nano_ofcp', config={'seed': 0, 'allow_step_back':True})
 
     if trainable:
         # Load up the class of the DQN agent, and then we can populate with the weights from the checkpoint.
@@ -27,7 +27,18 @@ def env_load_dqn_agent_and_random_agent(agent_path=None,
                         device=torch.device('cpu')
                         )
     else:
-        agent = DQNAgent(scope='dqn',
+        if neg:
+            agent = DQNAgentNeg(scope='dqn',
+                        action_num=env.action_num,
+                        state_shape=env.state_shape,
+                        mlp_layers=[64, 64],
+                        device=torch.device('cpu'), 
+                        epsilon_start = 0.0,
+                        epsilon_end = 0.0,
+                        epsilon_decay_steps= 1
+                        )
+        else:
+            agent = DQNAgent(scope='dqn',
                         action_num=env.action_num,
                         state_shape=env.state_shape,
                         mlp_layers=[64, 64],
