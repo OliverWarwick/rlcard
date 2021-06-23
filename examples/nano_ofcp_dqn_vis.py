@@ -192,7 +192,6 @@ def play_out_game_all_actions(env, count):
             
             
             max_index = q_values.tolist().index(max(q_values.tolist()))
-            print(max_index)
             print("\nMAX VALUE: ")
             print("   ACTION    | Q VALUE | ALLOWED ")
             print(env.actions[max_index], round(q_values[max_index],4), max_index in state.get('legal_actions'), sep=', ')
@@ -243,10 +242,10 @@ if __name__ == "__main__":
     # CURRENT BEST w/o neg rewards.
     if args.model == "dqn":
         # Load location of best DQN agent. Need to alter when we retrain.
-        env = env_load_dqn_agent_and_random_agent(trainable=False, agent_path="ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run0/model/best_model.pth", neg=False)
+        env = env_load_dqn_agent_and_random_agent(trainable=False, agent_path="ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run10/model/best_model.pth", neg=False)
     if args.model == "dqn_neg_reward":
         # Current best w/ neg rewards
-        env = env_load_dqn_agent_and_random_agent(trainable=False, agent_path="ow_model/experiments/nano_ofcp_dqn_neg/run0/model/best_model.pth", neg=True)
+        env = env_load_dqn_agent_and_random_agent(trainable=False, agent_path="ow_model/experiments/nano_ofcp_dqn_neg/run10/model/best_model.pth", neg=True)
 
 
 

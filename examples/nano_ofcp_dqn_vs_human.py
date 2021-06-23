@@ -10,104 +10,136 @@ from rlcard.agents import DQNAgentPytorch as DQNAgent, DQNAgentPytorchNeg as DQN
 from rlcard.agents import NanoOFCPHumanAgent as HumanAgent
 from rlcard.utils.utils import print_card
 from nano_ofcp_dqn_pytorch_load_model import env_load_dqn_agent_and_random_agent
+import argparse
 
-CARDS_TO_PLAY = 0
-FRONT_ROW = 1 
-BACK_ROW = 2
-DISCARD_PILE = 3
-OPPO_FRONT_ROW = 0
-OPPO_BACK_ROW = 1
+def main(agent_path, model_name):
 
-agent_path = "ow_model/experiments/nano_ofcp_dqn_neg/run0/model/best_model.pth"
+    CARDS_TO_PLAY = 0
+    FRONT_ROW = 1 
+    BACK_ROW = 2
+    DISCARD_PILE = 3
+    OPPO_FRONT_ROW = 0
+    OPPO_BACK_ROW = 1
 
-# Make environment and enable human mode
-# Set 'record_action' to True because we need it to print results
-player_num = 2
-env = rlcard.make('nano_ofcp', config={'record_action': True, 'game_player_num': player_num})
+    if agent_path is None:
+        agent_path = "ow_model/experiments/nano_ofcp_dqn_neg/run10/model/best_model.pth"
+    if model_name is None:
+        model_name = "dqn_neg_reward"
 
-human_agent = HumanAgent(env.action_num)
-dqn_agent = DQNAgentNeg(scope='dqn',
-                        action_num=env.action_num,
-                        state_shape=env.state_shape,
-                        mlp_layers=[64, 64],
-                        device=torch.device('cpu'), 
-                        epsilon_start = 0.0,
-                        epsilon_end = 0.0,
-                        epsilon_decay_steps= 1
-                        )
-checkpoint = torch.load(agent_path)
-dqn_agent.load(checkpoint)
+    # Make environment and enable human mode
+    # Set 'record_action' to True because we need it to print results
+    player_num = 2
+    env = rlcard.make('nano_ofcp', config={'record_action': True, 'game_player_num': player_num})
 
-env.set_agents([human_agent, dqn_agent])
+    human_agent = HumanAgent(env.action_num)
+    if model_name == 'dqn':
+        dqn_agent = DQNAgent(scope='dqn',
+                            action_num=env.action_num,
+                            state_shape=env.state_shape,
+                            mlp_layers=[64, 64],
+                            device=torch.device('cpu'), 
+                            epsilon_start = 0.0,
+                            epsilon_end = 0.0,
+                            epsilon_decay_steps= 1
+                            )
+    else:
+        dqn_agent = DQNAgentNeg(scope='dqn',
+                            action_num=env.action_num,
+                            state_shape=env.state_shape,
+                            mlp_layers=[64, 64],
+                            device=torch.device('cpu'), 
+                            epsilon_start = 0.0,
+                            epsilon_end = 0.0,
+                            epsilon_decay_steps= 1
+                            )
+    checkpoint = torch.load(agent_path)
+    dqn_agent.load(checkpoint)
 
-running_totals = [0, 0]
-num_round = 0
+    env.set_agents([human_agent, dqn_agent])
 
-print(">> Nano OFCP human agent")
+    running_totals = [0, 0]
+    num_round = 0
 
-while True:
-    print(">> Start a new game")
-    num_round += 1
+    print(">> Nano OFCP human agent")
 
-    trajectories, payoffs = env.run(is_training=False)
-    # If the human does not take the final action, we need to
-    # print other players action
-   
-    if len(trajectories[0]) != 0:
-        final_state = []
-        action_record = []
-        state = []
-        _action_list = []
+    while True:
+        print(">> Start a new game")
+        num_round += 1
 
-        for i in range(player_num):
-            final_state.append(trajectories[i][-1][-2])
-            state.append(final_state[i]['raw_obs'])
-
-        action_record.append(final_state[i]['action_record'])
-        for i in range(1, len(action_record) + 1):
-            _action_list.insert(0, action_record[-i])
-
-        for pair in _action_list[0]:
-            print('>> Player', pair[0], 'chooses', pair[1])
+        trajectories, payoffs = env.run(is_training=False)
+        # If the human does not take the final action, we need to
+        # print other players action
     
-    # print("State i of state: {}".format(state[i]['state']))
-    # print(state[i])
+        if len(trajectories[0]) != 0:
+            final_state = []
+            action_record = []
+            state = []
+            _action_list = []
 
-    # Get the ending arrangement.
-    my_cards = state[i]['state'][0]
-    oppo_cards = state[i]['state'][1] # Unfortunate naming - maybe change in future.
-   
-    print('\n===============   MY HAND  ===============\n')
-    print('===============   Front Row       ===============')
-    print_card(my_cards[FRONT_ROW])
-    print('===============   Back Row        ===============')
-    print_card(my_cards[BACK_ROW])
+            for i in range(player_num):
+                final_state.append(trajectories[i][-1][-2])
+                state.append(final_state[i]['raw_obs'])
 
-    print('\n===============   OPPO HAND   ===============\n')
-    print('===============   Front Row       ===============')
-    print_card(oppo_cards[OPPO_FRONT_ROW])
-    print('===============   Back Row        ===============')
-    print_card(oppo_cards[OPPO_BACK_ROW])
-    print('===============     Result     ===============')
+            action_record.append(final_state[i]['action_record'])
+            for i in range(1, len(action_record) + 1):
+                _action_list.insert(0, action_record[-i])
 
-    print(payoffs)
+            for pair in _action_list[0]:
+                print('>> Player', pair[0], 'chooses', pair[1])
+        
+        # print("State i of state: {}".format(state[i]['state']))
+        # print(state[i])
 
-    # In OFCP there are only one payoff which comes at the end, so payoff will only have 1 value..
+        # Get the ending arrangement.
+        my_cards = state[i]['state'][0]
+        oppo_cards = state[i]['state'][1] # Unfortunate naming - maybe change in future.
+    
+        print('\n===============   MY HAND  ===============\n')
+        print('===============   Front Row       ===============')
+        print_card(my_cards[FRONT_ROW])
+        print('===============   Back Row        ===============')
+        print_card(my_cards[BACK_ROW])
+
+        print('\n===============   OPPO HAND   ===============\n')
+        print('===============   Front Row       ===============')
+        print_card(oppo_cards[OPPO_FRONT_ROW])
+        print('===============   Back Row        ===============')
+        print_card(oppo_cards[OPPO_BACK_ROW])
+        print('===============     Result     ===============')
+
+        print(payoffs)
+
+        # In OFCP there are only one payoff which comes at the end, so payoff will only have 1 value..
+        for i in range(player_num):
+            # Add to the running totals.
+            running_totals[i] = running_totals[i] + payoffs[i]
+            if i == 0:
+                print("Payoff for human player: {}: {}".format(i, payoffs[i]))
+            else:
+                print("Payoff for computer {}: {}".format(i, payoffs[i]))
+            print('')
+
+        response = input("Press q to quit, or any key to continue: ")
+        if response.startswith('q'):
+            break
+
+    # Output the final scores.
+    print('\n===============   FINAL SCORES  ===============\n')
     for i in range(player_num):
         # Add to the running totals.
-        running_totals[i] = running_totals[i] + payoffs[i]
-        print("Payoff for player {}: {}".format(i, payoffs[i]))
-        print('')
-
-    response = input("Press q to quit, or any key to continue: ")
-    if response.startswith('q'):
-        break
-
-# Output the final scores.
-print('\n===============   FINAL SCORES  ===============\n')
-for i in range(player_num):
-        # Add to the running totals.
         print("Player {}".format(i))
-        print("Final score: {}".format(payoffs[i]))
-        print("Avg number of points per round: {}".format(payoffs[i] / num_round))
+        print("Final score: {}".format(running_totals[i]))
+        print("Avg number of points per round: {}".format(running_totals[i] / num_round))
         print('')
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description='Model_Type')
+    parser.add_argument('--model_type', dest='model', type=str, default='dqn', help='Supported: dqn, dqn_neg_reward')
+    args = parser.parse_args()
+
+    # CURRENT BEST w/o neg rewards.
+    if args.model == "dqn":
+        main(agent_path = "ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run10/model/best_model.pth", model_name='dqn')
+    elif args.model == "dqn_neg_reward":
+        main(agent_path = "ow_model/experiments/nano_ofcp_dqn_neg/run10/model/best_model.pth", model_name='dqn_neg_reward')
