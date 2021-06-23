@@ -47,7 +47,7 @@ def plot_one_std_timeseries_for_models(df, show=True, save=True, save_dir=None):
             500    0         6   0.076   NFSP_BR
     '''
 
-    colors = ['blue', 'red', 'green']
+    colors = ['red', 'blue', 'green']
     model_names = df.model.unique() 
 
     # Firstly, group the data by timestamp and model.
@@ -149,15 +149,15 @@ def plot_box_whisker_for_q_value_diff(data_a, model_name_a, data_b, model_name_b
 
 
 def timeseries_runner():
-    dqn = load_csv_data_for_timeseries(dir_name = ".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/", file_name = "dqn.csv")
-    dqn_with_neg = load_csv_data_for_timeseries(dir_name = ".ow_model/experiments/nano_ofcp_dqn_neg/", file_name = "dqn_adj_illegal.csv")
+    dqn = load_csv_data_for_timeseries(dir_name = "ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/", file_name = "dqn.csv")
+    dqn_with_neg = load_csv_data_for_timeseries(dir_name = "ow_model/experiments/nano_ofcp_dqn_neg/", file_name = "dqn_adj_illegal.csv")
     # nfsp_br = load_csv_data_for_model(dir_name = '.ow_model/experiments/nano_ofcp_nfsp_result_exper/', file_name = "nfsp_br.csv")
     # nfsp_ap = load_csv_data_for_model(dir_name = '.ow_model/experiments/nano_ofcp_nfsp_result_exper/', file_name = "nfsp_ap.csv")
-    plot_one_std_timeseries_for_models(pd.concat([dqn, dqn_with_neg]), show=True, save=True, save_dir='.ow_model/experiments/nano_ofcp_nfsp_result_exper/')
+    plot_one_std_timeseries_for_models(pd.concat([dqn, dqn_with_neg]), show=True, save=True, save_dir='ow_model/experiments/nano_ofcp_nfsp_result_exper/')
 
 def box_whisker_runner():
-    dqn = load_q_value_diff_data(dir_name = ".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/", file_name = "q_values_diffs_v2.csv")
-    dqn_neg_reward = load_q_value_diff_data(dir_name = ".ow_model/experiments/nano_ofcp_dqn_neg/", file_name = "q_values_diffs_v2.csv")
+    dqn = load_q_value_diff_data(dir_name = "ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/", file_name = "q_values_diffs_v2.csv")
+    dqn_neg_reward = load_q_value_diff_data(dir_name = "ow_model/experiments/nano_ofcp_dqn_neg/", file_name = "q_values_diffs_v2.csv")
     print(dqn)
     print(dqn_neg_reward)
     plot_box_whisker_for_q_value_diff(dqn, "DQN", dqn_neg_reward, "DQN_ADJ_ILLEGAL", ".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/")
@@ -170,5 +170,5 @@ def box_whisker_runner():
 
 
 if __name__ == '__main__':
-    # timeseries_runner()
-    box_whisker_runner()
+    timeseries_runner()
+    # box_whisker_runner()

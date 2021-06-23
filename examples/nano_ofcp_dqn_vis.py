@@ -234,6 +234,7 @@ def play_out_game_all_actions(env, count):
 
 if __name__ == "__main__":
 
+    # Parsing for the arguments.
     parser = argparse.ArgumentParser(description='Type of Vis')
     parser.add_argument('--full_action_space', dest='full_action_space', type=bool, default=True, help='Whether full action space (i.e: All 12 actions) or just those allowed. True / False')
     parser.add_argument('--model_type', dest='model', type=str, default='dqn', help='Supported: dqn, dqn_neg_reward')
