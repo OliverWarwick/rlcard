@@ -2,17 +2,17 @@
 '''
 import torch
 import os
-
 import rlcard
-from rlcard.agents import DQNAgentPytorch as DQNAgent
+
+from rlcard.agents import DQNAgentPytorch
 from rlcard.agents import RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
 from examples.nano_ofcp_q_value_approx import eval_q_value_approx
 
-def training_run(evaluate_every = 1000, 
-                evaluate_num = 2500, 
-                episode_num = 50000, 
+def training_run(evaluate_every = 2500, 
+                evaluate_num = 5000, 
+                episode_num = 100000, 
                 memory_init_size = 2500, 
                 train_every = 1, 
                 log_dir = None,
@@ -38,20 +38,20 @@ def training_run(evaluate_every = 1000,
     # Set a global seed
     set_global_seed(random_seed)
 
-    agent = DQNAgent(scope='dqn',
+    agent = DQNAgentPytorch(scope='dqn',
                     action_num=env.action_num,
                     replay_memory_init_size=memory_init_size,
+                    update_target_estimator_every=2500,
                     train_every=train_every,
                     state_shape=env.state_shape,
-                    mlp_layers=[64, 64],
+                    mlp_layers=[128, 128],
                     device=torch.device('cpu'),
                     epsilon_decay_steps=episode_num,
-                    epsilon_start=0.5,
+                    epsilon_start=1.0,
                     epsilon_end=0.1,
                     learning_rate=0.00005,
-                    update_target_estimator_every=evaluate_every,
                     verbose=False, 
-                    batch_size=32,
+                    batch_size=64,
                     discount_factor=1.0)
     random_agent = RandomAgent(action_num=eval_env.action_num)
     env.set_agents([agent, random_agent])
@@ -108,31 +108,31 @@ def training_run(evaluate_every = 1000,
 
 
 if __name__ == '__main__':
-    for i in range(0,5):
-        # training_run(log_dir = f".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run{i}/logs/", 
-        # save_dir = f".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run{i}/model/", random_seed=i*100)
-        random_seed = i * 100
+    for i in range(0,1):
+        training_run(log_dir = f"ow_model/experiments/nano_ofcp_dqn_vs_random_training_run_2/run{i}/logs/", 
+        save_dir = f"ow_model/experiments/nano_ofcp_dqn_vs_random_training_run_2/run{i}/model/", random_seed=i*100)
+        # random_seed = i * 100
 
-        log_dir = f".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run{i}/logs/"
-        save_dir = f".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run{i}/model/"
-        # env = env_load_dqn_agent_and_random_agent(agent_path = save_dir + "best_model.pth", trainable=False, random_seed=random_seed)
+        # log_dir = f".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run_2/run{i}/logs/"
+        # save_dir = f".ow_model/experiments/nano_ofcp_dqn_vs_random_training_run_2/run{i}/model/"
+        # # env = env_load_dqn_agent_and_random_agent(agent_path = save_dir + "best_model.pth", trainable=False, random_seed=random_seed)
         
-        agent = DQNAgent(scope='dqn',
-                        action_num=12,
-                        state_shape=108,
-                        mlp_layers=[64, 64],
-                        device=torch.device('cpu'), 
-                        epsilon_start = 0.0,
-                        epsilon_end = 0.0,
-                        epsilon_decay_steps= 1
-                        )
-        checkpoint = torch.load(save_dir + "best_model.pth")
-        agent.load(checkpoint)
+        # agent = DQNAgent(scope='dqn',
+        #                 action_num=12,
+        #                 state_shape=108,
+        #                 mlp_layers=[64, 64],
+        #                 device=torch.device('cpu'), 
+        #                 epsilon_start = 0.0,
+        #                 epsilon_end = 0.0,
+        #                 epsilon_decay_steps= 1
+        #                 )
+        # checkpoint = torch.load(save_dir + "best_model.pth")
+        # agent.load(checkpoint)
 
-        q_value_log_dir = log_dir + 'q_values_logs_v2/'
-        random_agent = RandomAgent(action_num=12)
+        # q_value_log_dir = log_dir + 'q_values_logs_v2/'
+        # random_agent = RandomAgent(action_num=12)
 
-        print("Starting : {i}")
-        mean_q_value_diffs = eval_q_value_approx(agent, random_agent, sample_size=100, num_rollouts=100, log_dir=q_value_log_dir)
+        # print("Starting : {i}")
+        # mean_q_value_diffs = eval_q_value_approx(agent, random_agent, sample_size=100, num_rollouts=100, log_dir=q_value_log_dir)
 
 
