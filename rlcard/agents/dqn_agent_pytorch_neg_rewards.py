@@ -31,13 +31,14 @@ import torch
 import torch.nn as nn
 from collections import namedtuple
 from copy import deepcopy
+from rlcard.agents.dqn_agent_pytorch import DQNAgent, Estimator, Memory
 
 from rlcard.utils.utils import remove_illegal
 
 Transition = namedtuple('Transition', ['state', 'action', 'reward', 'next_state', 'done'])
 
 
-class DQNAgentNeg(object):
+class DQNAgentNeg(DQNAgent):
     '''
     Approximate clone of rlcard.agents.dqn_agent.DQNAgent
     that depends on PyTorch instead of Tensorflow
@@ -124,22 +125,6 @@ class DQNAgentNeg(object):
         # Create replay memory
         self.memory = Memory(replay_memory_size, batch_size)
 
-    def feed(self, ts):
-        ''' Store data in to replay buffer and train the agent. There are two stages.
-            In stage 1, populate the memory without training
-            In stage 2, train the agent every several timesteps
-
-        Args:
-            ts (list): a list of 5 elements that represent the transition
-        '''
-        (state, action, reward, next_state, done) = tuple(ts)
-        self.feed_memory(state['obs'], action, reward, next_state['obs'], done)
-        self.total_t += 1
-        tmp = self.total_t - self.replay_memory_init_size
-        if tmp>=0 and tmp%self.train_every == 0:
-            # print("Training RL Network of agent: {}".format(self.scope))
-            self.train()
-
     def step(self, state):
         ''' Predict the action for genrating training data but
             have the predictions disconnected from the computation graph
@@ -219,6 +204,11 @@ class DQNAgentNeg(object):
         best_action = np.argmax(q_values)
         A[best_action] += (1.0 - epsilon)
         # print("A values: {}".format(A))
+
+        if self.total_t % 1000 == 1:
+            # This is the for the total timesteps so every 1000 steps we can look at the q values:
+            print("{}th Iteration".format(self.total_t))
+            print("Natural Q Values: {}".format(q_values))
         return A
     
     def raw_q_values(self, state):
@@ -277,250 +267,3 @@ class DQNAgentNeg(object):
             print("\nINFO - Copied model parameters to target network.")
 
         self.train_t += 1
-
-    def feed_memory(self, state, action, reward, next_state, done):
-        ''' Feed transition to memory
-
-        Args:
-            state (numpy.array): the current state
-            action (int): the performed action ID
-            reward (float): the reward received
-            next_state (numpy.array): the next state after performing the action
-            done (boolean): whether the episode is finished
-        '''
-        self.memory.save(state, action, reward, next_state, done)
-
-    def get_state_dict(self):
-        ''' Get the state dict to save models
-
-        Returns:
-            (dict): A dict of model states
-        '''
-        q_key = self.scope + '_q_estimator'
-        q_value = self.q_estimator.qnet.state_dict()
-        target_key = self.scope + '_target_estimator'
-        target_value = self.target_estimator.qnet.state_dict()
-        return {q_key: q_value, target_key: target_value}
-
-    def load(self, checkpoint):
-        ''' Load model
-
-        Args:
-            checkpoint (dict): the loaded state
-        '''
-        q_key = self.scope + '_q_estimator'
-        self.q_estimator.qnet.load_state_dict(checkpoint[q_key])
-        target_key = self.scope + '_target_estimator'
-        self.target_estimator.qnet.load_state_dict(checkpoint[target_key])
-
-class Estimator(object):
-    '''
-    Approximate clone of rlcard.agents.dqn_agent.Estimator that
-    uses PyTorch instead of Tensorflow.  All methods input/output np.ndarray.
-
-    Q-Value Estimator neural network.
-    This network is used for both the Q-Network and the Target Network.
-    '''
-
-    def __init__(self, action_num=2, learning_rate=0.001, state_shape=None, mlp_layers=None, device=None, verbose=False):
-        ''' Initilalize an Estimator object.
-
-        Args:
-            action_num (int): the number output actions
-            state_shape (list): the shape of the state space
-            mlp_layers (list): size of outputs of mlp layers
-            device (torch.device): whether to use cpu or gpu
-        '''
-        self.action_num = action_num
-        self.learning_rate=learning_rate
-        self.state_shape = state_shape
-        self.mlp_layers = mlp_layers
-        self.device = device
-        self.verbose = verbose
-
-        # set up Q model and place it in eval mode
-        qnet = EstimatorNetwork(action_num, state_shape, mlp_layers, verbose)
-        qnet = qnet.to(self.device)
-        self.qnet = qnet
-        self.qnet.eval()
-
-        # initialize the weights using Xavier init
-        for p in self.qnet.parameters():
-            if len(p.data.shape) > 1:
-                nn.init.xavier_uniform_(p.data)
-
-        # set up loss function
-        self.mse_loss = nn.MSELoss(reduction='mean')
-
-        # set up optimizer
-        self.optimizer =  torch.optim.Adam(self.qnet.parameters(), lr=self.learning_rate)
-
-    def predict_nograd(self, s):
-        ''' Predicts action values, but prediction is not included
-            in the computation graph.  It is used to predict optimal next
-            actions in the Double-DQN algorithm.
-
-        Args:
-          s (np.ndarray): (batch, state_len)
-
-        Returns:
-          np.ndarray of shape (batch_size, NUM_VALID_ACTIONS) containing the estimated
-          action values.
-        '''
-        with torch.no_grad():
-            s = torch.from_numpy(s).float().to(self.device)
-            q_as = self.qnet(s).cpu().numpy()
-        return q_as
-
-    def update(self, s, a, y):
-        ''' Updates the estimator towards the given targets.
-            In this case y is the target-network estimated
-            value of the Q-network optimal actions, which
-            is labeled y in Algorithm 1 of Minh et al. (2015)
-
-        Args:
-          s (np.ndarray): (batch, state_shape) state representation
-          a (np.ndarray): (batch,) integer sampled actions
-          y (np.ndarray): (batch,) value of optimal actions according to Q-target
-
-        Returns:
-          The calculated loss on the batch.
-        '''
-        self.optimizer.zero_grad()
-
-        self.qnet.train()
-
-        s = torch.from_numpy(s).float().to(self.device)
-        a = torch.from_numpy(a).long().to(self.device)
-        y = torch.from_numpy(y).float().to(self.device)
-
-        # (batch, state_shape) -> (batch, action_num)
-        q_as = self.qnet(s)
-        if self.verbose: print("Q Actions From Network: {}".format(q_as))
-
-        # (batch, action_num) -> (batch, )
-        Q = torch.gather(q_as, dim=-1, index=a.unsqueeze(-1)).squeeze(-1)
-        if self.verbose: print("Q unwrapped: {}".format(Q))
-        if self.verbose: print("Y: {}".format(y))
-        Q.retain_grad()
-
-        # update model
-        batch_loss = self.mse_loss(Q, y)
-        batch_loss.backward()
-
-        if self.verbose: print("Batch Loss Grad: {}".format(batch_loss.grad))
-        if self.verbose: print("Q Grad: {}".format(Q.grad))
-        self.optimizer.step()
-        batch_loss = batch_loss.item()
-
-        self.qnet.eval()
-
-        return batch_loss
-
-
-class EstimatorNetwork(nn.Module):
-    ''' The function approximation network for Estimator
-        It is just a series of tanh layers. All in/out are torch.tensor
-    '''
-
-    def __init__(self, action_num=2, state_shape=None, mlp_layers=None, verbose=False):
-        ''' Initialize the Q network
-
-        Args:
-            action_num (int): number of legal actions
-            state_shape (list): shape of state tensor
-            mlp_layers (list): output size of each fc layer
-        '''
-        super(EstimatorNetwork, self).__init__()
-
-        self.action_num = action_num
-        self.state_shape = state_shape
-        self.mlp_layers = mlp_layers
-        self.verbose = verbose
-
-        # build the Q network
-        layer_dims = [np.prod(self.state_shape)] + self.mlp_layers
-        fc = [nn.Flatten()]
-        fc.append(nn.BatchNorm1d(layer_dims[0]))
-        for i in range(len(layer_dims)-1):
-            lin_layer = nn.Linear(layer_dims[i], layer_dims[i+1], bias=False)
-            if self.verbose: lin_layer.register_backward_hook(hook_fn)
-            fc.append(lin_layer)
-            fc.append(nn.Tanh())
-        fc.append(nn.Linear(layer_dims[-1], self.action_num, bias=False))
-        self.fc_layers = nn.Sequential(*fc)
-
-    def forward(self, s):
-        ''' Predict action values
-
-        Args:
-            s  (Tensor): (batch, state_shape)
-        '''
-        return self.fc_layers(s)
-
-class Memory(object):
-    ''' Memory for saving transitions
-    '''
-
-    def __init__(self, memory_size, batch_size):
-        ''' Initialize
-        Args:
-            memory_size (int): the size of the memroy buffer
-        '''
-        self.memory_size = memory_size
-        self.batch_size = batch_size
-        self.memory = []
-
-    def save(self, state, action, reward, next_state, done):
-        ''' Save transition into memory
-
-        Args:
-            state (numpy.array): the current state
-            action (int): the performed action ID
-            reward (float): the reward received
-            next_state (numpy.array): the next state after performing the action
-            done (boolean): whether the episode is finished
-        '''
-        if len(self.memory) == self.memory_size:
-            self.memory.pop(0)
-        transition = Transition(state, action, reward, next_state, done)
-        self.memory.append(transition)
-
-    def sample(self):
-        ''' Sample a minibatch from the replay memory
-
-        Returns:
-            state_batch (list): a batch of states
-            action_batch (list): a batch of actions
-            reward_batch (list): a batch of rewards
-            next_state_batch (list): a batch of states
-            done_batch (list): a batch of dones
-        '''
-        samples = random.sample(self.memory, self.batch_size)
-        return map(np.array, zip(*samples))
-
-def copy_model_parameters(sess, estimator1, estimator2):
-    ''' Copys the model parameters of one estimator to another.
-
-    Args:
-        sess (tf.Session): Tensorflow Session object
-        estimator1 (Estimator): Estimator to copy the paramters from
-        estimator2 (Estimator): Estimator to copy the parameters to
-    '''
-    e1_params = [t for t in tf.trainable_variables() if t.name.startswith(estimator1.scope)]
-    e1_params = sorted(e1_params, key=lambda v: v.name)
-    e2_params = [t for t in tf.trainable_variables() if t.name.startswith(estimator2.scope)]
-    e2_params = sorted(e2_params, key=lambda v: v.name)
-
-    update_ops = []
-    for e1_v, e2_v in zip(e1_params, e2_params):
-        op = e2_v.assign(e1_v)
-        update_ops.append(op)
-
-    sess.run(update_ops)
-
-def hook_fn(m, i, o):
-    print("\n\n\n")
-    print(m)
-    print(i[0])
-    print(o[0])

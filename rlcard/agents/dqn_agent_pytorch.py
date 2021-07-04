@@ -185,6 +185,10 @@ class DQNAgent(object):
         best_action = np.argmax(q_values)
         A[best_action] += (1.0 - epsilon)
         # print("A values: {}".format(A))
+        if self.total_t % 1000 == 1:
+            # This is the for the total timesteps so every 1000 steps we can look at the q values:
+            print("{}th Iteration".format(self.total_t))
+            print("Natural Q Values: {}".format(q_values))
         return A
     
     def raw_q_values(self, state):
@@ -266,7 +270,12 @@ class DQNAgent(object):
         q_value = self.q_estimator.qnet.state_dict()
         target_key = self.scope + '_target_estimator'
         target_value = self.target_estimator.qnet.state_dict()
-        return {q_key: q_value, target_key: target_value}
+        optimizer_q_key = self.scope + '_q_estimator_opt'
+        optimizer_q_value = self.q_estimator.optimizer.state_dict()
+        optimizer_target_key = self.scope + '_target_estimator_opt'
+        optimizer_target_value = self.target_estimator.optimizer.state_dict()
+         
+        return {q_key: q_value, target_key: target_value, optimizer_q_key: optimizer_q_value, optimizer_target_key: optimizer_target_value}
 
     def load(self, checkpoint):
         ''' Load model
@@ -278,6 +287,11 @@ class DQNAgent(object):
         self.q_estimator.qnet.load_state_dict(checkpoint[q_key])
         target_key = self.scope + '_target_estimator'
         self.target_estimator.qnet.load_state_dict(checkpoint[target_key])
+        optimizer_q_key = self.scope + '_q_estimator_opt'
+        self.q_estimator.optimizer.load_state_dict(checkpoint[optimizer_q_key])
+        optimizer_target_key = self.scope + '_target_estimator_opt'
+        self.target_estimator.optimizer.load_state_dict(checkpoint[optimizer_target_key])
+
 
 class Estimator(object):
     '''
@@ -319,7 +333,7 @@ class Estimator(object):
         self.mse_loss = nn.MSELoss(reduction='mean')
 
         # set up optimizer
-        self.optimizer =  torch.optim.Adam(self.qnet.parameters(), lr=self.learning_rate)
+        self.optimizer = torch.optim.Adam(self.qnet.parameters(), lr=self.learning_rate)
 
     def predict_nograd(self, s):
         ''' Predicts action values, but prediction is not included
