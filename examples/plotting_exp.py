@@ -49,7 +49,6 @@ def plot_one_std_timeseries_for_models(df, show=True, save=True, save_dir=None):
 
     colors = ['red', 'blue', 'green']
     model_names = df.model.unique() 
-
     # Firstly, group the data by timestamp and model.
 
     grouped_data = df.groupby(['model'])
@@ -146,6 +145,59 @@ def plot_box_whisker_for_q_value_diff(data_a, model_name_a, data_b, model_name_b
 
 
 
+def plot_states_prop(data):
+
+    state_data = data[['episode', 'states']]
+    prop_data = data[['episode', 'prop']]
+
+    # Plot on the same graoh, the number of states encounting.
+    # And also the propotion of the latest states which are new.
+
+    # Create a mean of the data, and then a std coloum for each.
+    # Firstly, group the data by timestamp and model.
+
+    state_data_mean = state_data.groupby('episode').mean()
+    state_data_std = state_data.groupby('episode').std()
+    state_data_mean['upperbound'] = state_data_mean['states'] + state_data_std['states']
+    state_data_mean['lowerbound'] = state_data_mean['states'] - state_data_std['states']
+
+    prop_data_mean = prop_data.groupby('episode').mean()
+    prop_data_std = prop_data.groupby('episode').std()
+    prop_data_mean['upperbound'] = prop_data_mean['prop'] + prop_data_std['prop']
+    prop_data_mean['lowerbound'] = prop_data_mean['prop'] - prop_data_std['prop']
+
+    print(state_data_mean)
+    print(prop_data_mean)
+
+    # create figure and axis objects with subplots()
+    fig,ax = plt.subplots()
+    # make a plot
+    state_data_mean['states'].plot(color="red", marker="o", ax=ax)
+    # ax.set_yscale('log')
+    ax.fill_between(state_data_mean.index, state_data_mean.lowerbound, state_data_mean.upperbound, color="red", alpha=.2)
+    # set x-axis label
+    ax.set_xlabel("Episodes",fontsize=14)
+    # set y-axis label
+    ax.set_ylabel("Number of Distinct States",color="red",fontsize=14)
+
+    # twin object for two different y-axis on the sample plot
+    ax2=ax.twinx()
+    # make a plot with different y-axis using second axis object
+    prop_data_mean['prop'].plot(color="blue",marker="o", ax=ax2)
+    ax2.fill_between(prop_data_mean.index, prop_data_mean.lowerbound, prop_data_mean.upperbound, color="blue", alpha=.2)
+    ax2.set_ylabel("Proportion of New States Previously Unvisited", color="blue", fontsize=14)
+    plt.title("Nano OFCP State Space Growth under Exploration")
+    plt.show()
+    # save the plot as a file
+    fig.savefig('states_vs_prob_new.jpg',
+                format='png',
+                dpi=500,
+                bbox_inches='tight')
+
+
+
+
+
 
 
 def timeseries_runner():
@@ -164,11 +216,15 @@ def box_whisker_runner():
     
 
 
+def state_prop_runner():
+    data = pd.read_csv("state_data.csv")
+    non_zero_rows = data[data['episode'] >= 500]
+    plot_states_prop(non_zero_rows)
 
 
 
 
 
 if __name__ == '__main__':
-    timeseries_runner()
+    state_prop_runner()
     # box_whisker_runner()

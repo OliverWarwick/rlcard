@@ -189,6 +189,10 @@ class DQNAgent(object):
             # This is the for the total timesteps so every 1000 steps we can look at the q values:
             print("{}th Iteration".format(self.total_t))
             print("Natural Q Values: {}".format(q_values))
+
+            # print("Optimiser Values: ")
+            # print(self.q_estimator.optimizer.state_dict())
+            
         return A
     
     def raw_q_values(self, state):

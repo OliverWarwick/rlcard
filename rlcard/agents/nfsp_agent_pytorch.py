@@ -27,7 +27,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from rlcard.agents.dqn_agent_pytorch import DQNAgent
+from rlcard.agents.dqn_agent_pytorch_neg_rewards import DQNAgentNeg
 from rlcard.utils.utils import remove_illegal
 
 Transition = collections.namedtuple('Transition', 'info_state action_probs')
@@ -122,10 +122,10 @@ class NFSPAgent(object):
         self._step_counter = 0
 
         # Build the action-value network
-        self._rl_agent = DQNAgent(scope+'_dqn', q_replay_memory_size, q_replay_memory_init_size, \
+        self._rl_agent = DQNAgentNeg(scope+'_dqn', q_replay_memory_size, q_replay_memory_init_size, \
             q_update_target_estimator_every, q_discount_factor, q_epsilon_start, q_epsilon_end, \
             q_epsilon_decay_steps, q_batch_size, action_num, state_shape, q_train_every, q_mlp_layers, \
-            rl_learning_rate, device)
+            rl_learning_rate, device, max_neg_reward=-2)
 
         # Build the average policy supervised model
         self._build_model()
@@ -161,9 +161,8 @@ class NFSPAgent(object):
         # print("Total T: {}, Len Reservoir Buffer: {}, Min Size: {}, T / Train: {}".format(self.total_t, len(self._reservoir_buffer), self._min_buffer_size_to_learn, self.total_t%self._train_every == 0))
 
         if self.total_t>0 and len(self._reservoir_buffer) >= self._min_buffer_size_to_learn and self.total_t%self._train_every == 0:
-            for _ in range(4): 
-                sl_loss  = self.train_sl()
-                print('\rINFO - Agent {}, step {}, sl-loss: {}'.format(self._scope, self.total_t, sl_loss), end='')
+            sl_loss  = self.train_sl()
+            print('\rINFO - Agent {}, step {}, sl-loss: {}'.format(self._scope, self.total_t, sl_loss), end='')
 
     def step(self, state):
         ''' Returns the action to be taken.
@@ -295,8 +294,10 @@ class NFSPAgent(object):
         Returns:
             (dict): A dict of model states
         '''
-        state_dict = self._rl_agent.get_state_dict()
-        state_dict[self._scope] = self.policy_network.state_dict()
+        state_dict = {}
+        state_dict[self._scope + '_sl_network'] = self.policy_network.mlp.state_dict()
+        state_dict[self._scope + '_sl_optimizer'] = self.policy_network_optimizer.state_dict()
+        state_dict.update(self._rl_agent.get_state_dict())
         return state_dict
 
     def load(self, checkpoint):
@@ -305,7 +306,14 @@ class NFSPAgent(object):
         Args:
             checkpoint (dict): the loaded state
         '''
-        self.policy_network.load_state_dict(checkpoint[self._scope])
+        # Load up the values into the policy network
+        # print(checkpoint.keys())
+        # print(checkpoint['nfsp0_dqn_q_estimator'].keys())
+        # print(self._rl_agent.scope)
+        self.policy_network.mlp.load_state_dict(checkpoint[self._scope + '_sl_network'])
+        self.policy_network_optimizer.load_state_dict(checkpoint[self._scope + '_sl_optimizer'])
+        # Then reconstruct the values which are for the inner RL agent, which can be handled by the methods within the class.
+        self._rl_agent.load(checkpoint)
 
 class AveragePolicyNetwork(nn.Module):
     '''

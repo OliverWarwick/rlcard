@@ -9,10 +9,10 @@ import torch
 from rlcard.agents import DQNAgentPytorch as DQNAgent, DQNAgentPytorchNeg as DQNAgentNeg
 from rlcard.agents import NanoOFCPHumanAgent as HumanAgent
 from rlcard.utils.utils import print_card
-from nano_ofcp_dqn_pytorch_load_model import env_load_dqn_agent_and_random_agent
+from nano_ofcp_dqn_pytorch_load_model import load_dqn_agent
 import argparse
 
-def main(agent_path, model_name):
+def run_games_against_human(agent_kwargs, agent_type, agent_path):
 
     CARDS_TO_PLAY = 0
     FRONT_ROW = 1 
@@ -21,41 +21,14 @@ def main(agent_path, model_name):
     OPPO_FRONT_ROW = 0
     OPPO_BACK_ROW = 1
 
-    if agent_path is None:
-        agent_path = "ow_model/experiments/nano_ofcp_dqn_neg/run10/model/best_model.pth"
-    if model_name is None:
-        model_name = "dqn_neg_reward"
-
     # Make environment and enable human mode
     # Set 'record_action' to True because we need it to print results
-    player_num = 2
-    env = rlcard.make('nano_ofcp', config={'record_action': True, 'game_player_num': player_num})
+    env = rlcard.make('nano_ofcp', config={'record_action': True})
 
-    human_agent = HumanAgent(env.action_num)
-    if model_name == 'dqn':
-        dqn_agent = DQNAgent(scope='dqn',
-                            action_num=env.action_num,
-                            state_shape=env.state_shape,
-                            mlp_layers=[64, 64],
-                            device=torch.device('cpu'), 
-                            epsilon_start = 0.0,
-                            epsilon_end = 0.0,
-                            epsilon_decay_steps= 1
-                            )
-    else:
-        dqn_agent = DQNAgentNeg(scope='dqn',
-                            action_num=env.action_num,
-                            state_shape=env.state_shape,
-                            mlp_layers=[64, 64],
-                            device=torch.device('cpu'), 
-                            epsilon_start = 0.0,
-                            epsilon_end = 0.0,
-                            epsilon_decay_steps= 1
-                            )
-    checkpoint = torch.load(agent_path)
-    dqn_agent.load(checkpoint)
+    human_agent = HumanAgent(action_num=env.action_num)
+    dqn_agent = load_dqn_agent(agent_kwargs, agent_type, agent_path)
 
-    env.set_agents([human_agent, dqn_agent])
+    env.set_agents([dqn_agent, human_agent])
 
     running_totals = [0, 0]
     num_round = 0
@@ -86,9 +59,6 @@ def main(agent_path, model_name):
 
             for pair in _action_list[0]:
                 print('>> Player', pair[0], 'chooses', pair[1])
-        
-        # print("State i of state: {}".format(state[i]['state']))
-        # print(state[i])
 
         # Get the ending arrangement.
         my_cards = state[i]['state'][0]
@@ -110,7 +80,7 @@ def main(agent_path, model_name):
         print(payoffs)
 
         # In OFCP there are only one payoff which comes at the end, so payoff will only have 1 value..
-        for i in range(player_num):
+        for i in range(2):
             # Add to the running totals.
             running_totals[i] = running_totals[i] + payoffs[i]
             if i == 0:
@@ -125,7 +95,7 @@ def main(agent_path, model_name):
 
     # Output the final scores.
     print('\n===============   FINAL SCORES  ===============\n')
-    for i in range(player_num):
+    for i in range(2):
         # Add to the running totals.
         print("Player {}".format(i))
         print("Final score: {}".format(running_totals[i]))
@@ -138,8 +108,24 @@ if __name__ == '__main__':
     parser.add_argument('--model_type', dest='model', type=str, default='dqn', help='Supported: dqn, dqn_neg_reward')
     args = parser.parse_args()
 
+    # Chance whenever we play with a new agent.
+
+    agent_kwargs = {
+        'scope': 'dqn',
+        'state_shape': 108,
+        'action_num': 12,
+        'device': torch.device('cpu'),
+        'verbose': False
+    }
+
     # CURRENT BEST w/o neg rewards.
     if args.model == "dqn":
-        main(agent_path = "ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run10/model/best_model.pth", model_name='dqn')
+        # Make assignment to directory of the best agent checkpoint.
+        agent_path = "ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run10/model/best_model.pth"
+        agent_type = "DQN"
+
     elif args.model == "dqn_neg_reward":
-        main(agent_path = "ow_model/experiments/nano_ofcp_dqn_neg/run10/model/best_model.pth", model_name='dqn_neg_reward')
+        agent_path = "ow_model/experiments/nano_ofcp_dqn_neg/run10/model/best_model.pth"
+        agent_type = "DQN_NEG"
+        
+    run_games_against_human(agent_kwargs, agent_type, agent_path)

@@ -13,7 +13,7 @@ from rlcard.agents.random_agent import RandomAgent
 from rlcard.utils.utils import set_global_seed, tournament
 
 # These are the loading functions we built.
-from nano_ofcp_dqn_pytorch_load_model import env_load_dqn_agent_and_random_agent, play_tournament
+from nano_ofcp_dqn_pytorch_load_model import load_dqn_agent, play_tournament
 from rlcard.utils.utils import reorganize, print_card
 
 import argparse
@@ -229,9 +229,6 @@ def play_out_game_all_actions(env, count):
     return trajectories, payoffs
     
 
-
-
-
 if __name__ == "__main__":
 
     # Parsing for the arguments.
@@ -243,14 +240,33 @@ if __name__ == "__main__":
     # CURRENT BEST w/o neg rewards.
     if args.model == "dqn":
         # Load location of best DQN agent. Need to alter when we retrain.
-        env = env_load_dqn_agent_and_random_agent(trainable=False, agent_path="ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run10/model/best_model.pth", neg=False)
+        agent_path = "ow_model/experiments/nano_ofcp_dqn_vs_random_training_run/run10/model/best_model.pth"
+        agent_type = "DQN"
+
     if args.model == "dqn_neg_reward":
         # Current best w/ neg rewards
-        env = env_load_dqn_agent_and_random_agent(trainable=False, agent_path="ow_model/experiments/nano_ofcp_dqn_neg/run10/model/best_model.pth", neg=True)
+        agent_path = "ow_model/experiments/nano_ofcp_dqn_neg/run10/model/best_model.pth"
+        agent_type = "DQN_NEG"
+        
 
+    # TODO: Replace with the the load from the DQN saved dict.
+    agent_kwargs = {
+        'scope': 'dqn',
+        'state_shape': 108,
+        'action_num': 12,
+        'device': torch.device('cpu'),
+        'mlp_layers': [128, 128],
+        'verbose': False
+    }
 
+    env = rlcard.make('nano_ofcp', config={'record_action': True})
+    random_agent = RandomAgent(action_num=env.action_num)
+    dqn_agent = load_dqn_agent(agent_kwargs, agent_type, agent_path)
+    env.set_agents([dqn_agent, random_agent])
 
+    running_totals = [0, 0]
     count = 0
+
     while True:
         if(args.full_action_space):
             play_out_game_all_actions(env, count)

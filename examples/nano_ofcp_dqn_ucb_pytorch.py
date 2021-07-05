@@ -2,14 +2,17 @@
 '''
 import torch
 import os
-import rlcard
+import numpy as np
+import pandas as pd
+import sys
 import json
 
-from rlcard.agents import DQNAgentPytorch
-from rlcard.agents import RandomAgent
+import rlcard
+from rlcard.agents import DQNAgentPytorchUCB as DQNAgentUCB, RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
 from examples.nano_ofcp_q_value_approx import eval_q_value_approx
+
 
 def training_run(log_dir, 
     save_dir, 
@@ -30,16 +33,11 @@ def training_run(log_dir,
     # Set up the model saving folder.
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-    
-    # Save the arguments for the q_agent so these can be loaded easily.
-    json_file = open(os.path.join(save_dir, 'agent_kwargs.json'), "w")
-    json.dump(q_agent_kwargs, json_file)
-    json_file.close()
 
     # Set a global seed
     set_global_seed(random_seed)
 
-    agent = DQNAgentPytorch(**q_agent_kwargs)
+    agent = DQNAgentUCB(**q_agent_kwargs)
     random_agent = RandomAgent(action_num=eval_env.action_num)
 
     env.set_agents([agent, random_agent])
@@ -47,9 +45,10 @@ def training_run(log_dir,
 
     # Init a Logger to plot the learning curve, and use the name of the model so we can 
     # later plot these.
-    logger = Logger(log_dir, csv_name="dqn.csv")
+    logger = Logger(log_dir, csv_name="dqn_ucb_handcrafted.csv")
 
     best_score = 0
+    num_states = []
 
     for episode in range(episode_num):
 
@@ -72,30 +71,49 @@ def training_run(log_dir,
 
             logger.log_performance(env.timestep, tournament(eval_env, evaluate_num)[0])
 
+        if episode in [0, 10, 100, 500, 1000, 2500, 5000, 10000, 25000]:
+            print("\nSummary Stats on Map:")
+            print("Size in bytes: {}".format(sys.getsizeof(agent.count_map)))
+            print("MByes: {}".format(sys.getsizeof(agent.count_map) / 1024))
+            print("Length of hashtable: {}".format(len(agent.count_map.keys())))
+
+            if episode != 0:
+                new_state_value = (len(agent.count_map) - num_states[-1][1]) / ((episode - num_states[-1][0]) * 12)
+                num_states.append([episode, len(agent.count_map), new_state_value])
+            else:
+                num_states.append([episode, len(agent.count_map), 0])
+
     # Close files in the logger
     logger.close_files()
 
     # Plot the learning curve
-    logger.plot('DQN')
+    logger.plot('DQN_UCB_HANDCRAFTED')
 
     # Save model
     state_dict = agent.get_state_dict()
     torch.save(state_dict, os.path.join(save_dir, 'model.pth'))
 
-    # Once model is saved, we can then test again to see how close the q values are to those 
-    # which we sample from chosen games.
-    q_value_log_dir = log_dir + 'q_values_logs/'
-    mean_q_value_diffs = eval_q_value_approx(agent, random_agent, sample_size=20, num_rollouts=100, log_dir=q_value_log_dir)
+    # Save the arguments for the q_agent so these can be loaded easily.
+    json_file = open(os.path.join(save_dir, 'agent_kwargs.json'), "w")
+    json.dump(q_agent_kwargs, json_file)
+    json_file.close()
+
+    print("Number of keys required at each stage.")
+    print(num_states)
+
+    return num_states
 
 
 if __name__ == '__main__':
 
+    overall_df = pd.DataFrame([], columns=['episode', 'states', 'prop'])
+    i = 0
     for i in range(0,1):
 
         run_kwargs = {
             'evaluate_every': 2500, 
             'evaluate_num': 5000, 
-            'episode_num': 5000, 
+            'episode_num': 10000, 
             'random_seed': i
         }
 
@@ -114,12 +132,26 @@ if __name__ == '__main__':
             'epsilon_end': 0.1,
             'epsilon_decay_steps': run_kwargs['episode_num'],
             'discount_factor': 1.0,
-            'verbose': False
+            'verbose': False,
+            'optimisitic_bias_on_action': 4,
+            'optimisitic_bias_on_bootstrap': 4,
+            'optimism_decay': 0.5
         }
 
-        training_run(
-            log_dir=f"ow_model/experiments/nano_ofcp_dqn_vs_random_training_saving/run{i}/logs/", 
-            save_dir=f"ow_model/experiments/nano_ofcp_dqn_vs_random_training_saving/run{i}/model/",
+        l = training_run(
+            log_dir=f"ow_model/experiments/nano_ofcp_dqn_ucb_exp_long_run/run{i}/logs/",
+            save_dir=f"ow_model/experiments/nano_ofcp_dqn_ucb_exp_long_run/run{i}/model/",
             q_agent_kwargs=agent_kwargs,
             **run_kwargs
         )
+
+        df = pd.DataFrame(l, columns=['episode', 'states', 'prop'])
+
+        overall_df = overall_df.append(df, ignore_index=True)
+
+    print("Dataframe of explored states.")    
+    print(overall_df)
+    overall_df.to_csv('state_data_small_key_exp_run.csv')
+
+
+       
