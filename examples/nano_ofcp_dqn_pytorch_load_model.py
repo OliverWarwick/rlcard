@@ -8,7 +8,7 @@ from rlcard.agents import DQNAgentPytorch as DQNAgent, DQNAgentPytorchNeg as DQN
 from rlcard.agents.random_agent import RandomAgent
 from rlcard.utils.utils import set_global_seed, tournament
 from rlcard.utils import Logger
-from examples.nano_ofcp_q_value_approx import eval_q_value_approx
+from nano_ofcp_q_value_approx import eval_q_value_approx
 
 import matplotlib.pyplot as plt
 
