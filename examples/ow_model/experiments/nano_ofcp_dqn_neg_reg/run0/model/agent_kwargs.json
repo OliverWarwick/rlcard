@@ -1,0 +1,1 @@
+{"scope": "dqn", "state_shape": 108, "action_num": 12, "device": "cpu", "replay_memory_init_size": 1000, "update_target_estimator_every": 5000, "train_every": 1, "mlp_layers": [128, 128, 64], "learning_rate": 5e-05, "batch_size": 64, "epsilon_start": 0.5, "epsilon_end": 0.05, "epsilon_decay_steps": 100000, "discount_factor": 1.0, "verbose": false, "max_neg_reward": -2}
