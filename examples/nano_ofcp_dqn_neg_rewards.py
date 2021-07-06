@@ -94,9 +94,9 @@ if __name__ == '__main__':
     for i in range(0,1):
 
         run_kwargs = {
-            'evaluate_every': 10000, 
-            'evaluate_num': 10000, 
-            'episode_num': 500000, 
+            'evaluate_every': 5000, 
+            'evaluate_num': 5000, 
+            'episode_num': 100000, 
             'random_seed': i
         }
 
@@ -108,7 +108,7 @@ if __name__ == '__main__':
             'replay_memory_init_size': 1000,
             'update_target_estimator_every': 5000,
             'train_every': 1,
-            'mlp_layers': [128, 64, 32],
+            'mlp_layers': [128, 128, 64],
             'learning_rate': 0.00005,
             'batch_size': 64,
             'epsilon_start': 0.5,
@@ -120,8 +120,8 @@ if __name__ == '__main__':
         }
 
         training_run(
-            log_dir=f"ow_model/experiments/nano_ofcp_dqn_mon_2/run{i}/logs/", 
-            save_dir=f"ow_model/experiments/nano_ofcp_dqn_mon_2/run{i}/model/",
+            log_dir=f"ow_model/experiments/nano_ofcp_dqn_neg_reg/run{i}/logs/", 
+            save_dir=f"ow_model/experiments/nano_ofcp_dqn_neg_reg/run{i}/model/",
             q_agent_kwargs=agent_kwargs,
             **run_kwargs
         )

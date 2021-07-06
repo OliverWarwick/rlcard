@@ -4,7 +4,7 @@ import os
 import torch
 import json
 import rlcard
-from rlcard.agents import DQNAgentPytorch as DQNAgent, DQNAgentPytorchNeg as DQNAgentNeg
+from rlcard.agents import DQNAgentPytorch as DQNAgent, DQNAgentPytorchNeg as DQNAgentNeg, DQNAgentPytorchUCB as DQNAgentUCB
 from rlcard.agents.random_agent import RandomAgent
 from rlcard.utils.utils import set_global_seed, tournament
 from rlcard.utils import Logger
@@ -27,6 +27,8 @@ def env_load_dqn_agent_and_random_agent(agent_kwargs, agent_type, agent_path):
         agent = DQNAgent(**agent_kwargs)
     elif agent_type == "DQN_NEG":
         agent = DQNAgentNeg(**agent_kwargs)
+    elif agent_type == "DQN_UCB":
+        agent = DQNAgentUCB(**agent_kwargs)
     else:
         raise Exception("Invalid type of class for the DQN loading algorithm.")
 
@@ -47,6 +49,8 @@ def load_dqn_agent(agent_kwargs, agent_type, agent_path):
         agent = DQNAgent(**agent_kwargs)
     elif agent_type == "DQN_NEG":
         agent = DQNAgentNeg(**agent_kwargs)
+    elif agent_type == "DQN_UCB":
+        agent = DQNAgentUCB(**agent_kwargs)
     else:
         raise Exception("Invalid type of class for the DQN loading algorithm.")
 

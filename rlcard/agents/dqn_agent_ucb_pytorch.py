@@ -41,13 +41,14 @@ import torch.nn as nn
 from collections import namedtuple
 from copy import deepcopy
 from rlcard.agents.dqn_agent_pytorch import DQNAgent, Estimator, Memory
+from rlcard.agents.dqn_agent_pytorch_neg_rewards import DQNAgentNeg
 
 from rlcard.utils.utils import remove_illegal
 
 Transition = namedtuple('Transition', ['state', 'action', 'reward', 'next_state', 'done'])
 
 
-class DQNAgentUCB(DQNAgent):
+class DQNAgentUCB(DQNAgentNeg):
     '''
     Approximate clone of rlcard.agents.dqn_agent.DQNAgent
     that depends on PyTorch instead of Tensorflow

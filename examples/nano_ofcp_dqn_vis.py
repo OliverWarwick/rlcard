@@ -245,8 +245,16 @@ if __name__ == "__main__":
 
     if args.model == "dqn_neg_reward":
         # Current best w/ neg rewards
-        agent_path = "ow_model/experiments/nano_ofcp_dqn_neg/run10/model/best_model.pth"
+        agent_path = "ow_model/experiments/nano_ofcp_dqn_mon_2/run0/model_cycle_2/best_model.pth"
+        # agent_kwargs_path = "ow_model/experiments/nano_ofcp_dqn_mon_2/run0/model_cycle_2/"
         agent_type = "DQN_NEG"
+
+    if args.model == 'dqn_ucb':
+        # Current best w/ neg rewards
+        agent_path = "ow_model/experiments/nano_ofcp_dqn_ucb_exp_very_long_run_1/run0/model/best_model.pth"
+        # agent_kwargs_path = "ow_model/experiments/nano_ofcp_dqn_mon_2/run0/model_cycle_2/"
+        agent_type = "DQN_UCB"
+
         
 
     # TODO: Replace with the the load from the DQN saved dict.
@@ -255,12 +263,13 @@ if __name__ == "__main__":
         'state_shape': 108,
         'action_num': 12,
         'device': torch.device('cpu'),
-        'mlp_layers': [128, 128],
+        'mlp_layers': [128, 64, 64],
         'verbose': False
     }
 
-    env = rlcard.make('nano_ofcp', config={'record_action': True})
+    env = rlcard.make('nano_ofcp', config={'record_action': True, 'allow_step_back': True})
     random_agent = RandomAgent(action_num=env.action_num)
+
     dqn_agent = load_dqn_agent(agent_kwargs, agent_type, agent_path)
     env.set_agents([dqn_agent, random_agent])
 

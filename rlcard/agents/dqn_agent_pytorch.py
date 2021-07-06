@@ -337,7 +337,7 @@ class Estimator(object):
         self.mse_loss = nn.MSELoss(reduction='mean')
 
         # set up optimizer
-        self.optimizer = torch.optim.Adam(self.qnet.parameters(), lr=self.learning_rate)
+        self.optimizer = torch.optim.Adam(self.qnet.parameters(), lr=self.learning_rate, weight_decay=1e-4)
 
     def predict_nograd(self, s):
         ''' Predicts action values, but prediction is not included

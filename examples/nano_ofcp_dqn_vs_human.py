@@ -11,6 +11,7 @@ from rlcard.agents import NanoOFCPHumanAgent as HumanAgent
 from rlcard.utils.utils import print_card
 from nano_ofcp_dqn_pytorch_load_model import load_dqn_agent
 import argparse
+import json
 
 def run_games_against_human(agent_kwargs, agent_type, agent_path):
 
@@ -49,7 +50,7 @@ def run_games_against_human(agent_kwargs, agent_type, agent_path):
             state = []
             _action_list = []
 
-            for i in range(player_num):
+            for i in range(2):
                 final_state.append(trajectories[i][-1][-2])
                 state.append(final_state[i]['raw_obs'])
 
@@ -110,13 +111,9 @@ if __name__ == '__main__':
 
     # Chance whenever we play with a new agent.
 
-    agent_kwargs = {
-        'scope': 'dqn',
-        'state_shape': 108,
-        'action_num': 12,
-        'device': torch.device('cpu'),
-        'verbose': False
-    }
+    json_kwargs_path = "ow_model/experiments/nano_ofcp_dqn_neg_reg/run0/" + "model/agent_kwargs.json"
+    json_file = open(json_kwargs_path, "r")
+    agent_kwargs = json.load(json_file)
 
     # CURRENT BEST w/o neg rewards.
     if args.model == "dqn":
@@ -125,7 +122,7 @@ if __name__ == '__main__':
         agent_type = "DQN"
 
     elif args.model == "dqn_neg_reward":
-        agent_path = "ow_model/experiments/nano_ofcp_dqn_neg/run10/model/best_model.pth"
+        agent_path = "ow_model/experiments/nano_ofcp_dqn_neg_reg/run0/model/best_model.pth"
         agent_type = "DQN_NEG"
         
     run_games_against_human(agent_kwargs, agent_type, agent_path)
