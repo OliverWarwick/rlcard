@@ -204,10 +204,14 @@ if __name__ == '__main__':
     parser.add_argument('--run_local', dest='run_env_local', type=bool, default=True, help='Whether we are running in colabs or not. True / False')
     args = parser.parse_args()
 
+    print(f"args.run_env_local: {args.run_env_local}")
+
     if args.run_env_local:
-        directory = "ow_model/experiments/nano_ofcp_dqn_league_multi_play/run0/"
+        directory = 'ow_model/experiments/nano_ofcp_dqn_league_multi_play/run0/'
+        print("Using local")
     else:
         directory = 'drive/MyDrive/msc_thesis/experiments/nano_ofcp_dqn_league_multi_play/'
+        print("Using colabs")
 
     trainable = True
 
