@@ -201,13 +201,13 @@ if __name__ == '__main__':
 
     # Parsing for the arguments.
     parser = argparse.ArgumentParser(description='Type of Vis')
-    parser.add_argument('--local', dest='run_env_local', type=bool, default=True, help='Whether we are running in colabs or not. True / False')
+    parser.add_argument('--run_local', dest='run_env_local', type=bool, default=True, help='Whether we are running in colabs or not. True / False')
     args = parser.parse_args()
 
     if args.run_env_local:
         directory = "ow_model/experiments/nano_ofcp_dqn_league_multi_play/run0/"
     else:
-        directory = '/content/drive/MyDrive/msc_thesis/experiments/nano_ofcp_dqn_league_multi_play/'
+        directory = 'drive/MyDrive/msc_thesis/experiments/nano_ofcp_dqn_league_multi_play/'
 
     trainable = True
 
@@ -215,30 +215,30 @@ if __name__ == '__main__':
     log_dir = directory + "logs_league"
     save_dir = directory + "logs_league"
 
-    # run_kwargs = {
-    #     'evaluate_every': 250, 
-    #     'evaluate_num': 50, 
-    #     'episode_num': 1000, 
-    #     'random_seed': 0,
-    #     'random_finish': 300, 
-    #     'early_finish': 600, 
-    #     'mid_finish': 1000,
-    #     'q_value_est_sample_size': 25, # 100 at normal test time.
-    #     'q_value_est_num_rollout': 25 # 100 at test time
-    # }
-
     run_kwargs = {
-        'evaluate_every': 5000, 
-        'evaluate_num': 5000, 
-        'episode_num': 300000, 
+        'evaluate_every': 250, 
+        'evaluate_num': 50, 
+        'episode_num': 1000, 
         'random_seed': 0,
-        'random_finish': 50000, 
-        'early_finish': 100000, 
-        'mid_finish': 150000,
-        'good_finish': 200000,
-        'q_value_est_sample_size': 100, # 100 at normal test time.
-        'q_value_est_num_rollout': 100 # 100 at test time
+        'random_finish': 300, 
+        'early_finish': 600, 
+        'mid_finish': 1000,
+        'q_value_est_sample_size': 25, # 100 at normal test time.
+        'q_value_est_num_rollout': 25 # 100 at test time
     }
+
+    # run_kwargs = {
+    #     'evaluate_every': 10000, 
+    #     'evaluate_num': 5000, 
+    #     'episode_num': 300000, 
+    #     'random_seed': 0,
+    #     'random_finish': 25000, 
+    #     'early_finish': 75000, 
+    #     'mid_finish': 125000,
+    #     'good_finish': 175000,
+    #     'q_value_est_sample_size': 100, # 100 at normal test time.
+    #     'q_value_est_num_rollout': 100 # 100 at test time
+    # }
     
     # agent_path = directory + "model/model.pth"
     # agent_type = "DQN_NEG"
