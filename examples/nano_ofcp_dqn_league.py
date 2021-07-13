@@ -5,6 +5,7 @@ import os
 import json 
 from copy import deepcopy
 import argparse
+import random
 import rlcard
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
@@ -13,12 +14,16 @@ from rlcard.agents import DQNAgentPytorchNeg as DQNAgentNeg, RandomAgent
 # from nano_ofcp_dqn_pytorch_load_model import load_dqn_agent
 
 
-def training_run(agent_kwargs, log_dir, save_dir, evaluate_every, evaluate_num, episode_num, random_seed, random_finish, early_finish, mid_finish, q_value_est_sample_size, q_value_est_num_rollout):
+def training_run(agent_kwargs, log_dir, save_dir, evaluate_every, evaluate_num, episode_num, random_seed, random_finish, early_finish, mid_finish, good_finish, q_value_est_sample_size, q_value_est_num_rollout):
+
+    trainable_environments = []
 
     # Make environment
     training_env_vs_random = rlcard.make('nano_ofcp', config={'seed': random_seed})
     training_env_vs_early_dqn = rlcard.make('nano_ofcp', config={'seed': random_seed})
     training_env_vs_mid_dqn = rlcard.make('nano_ofcp', config={'seed': random_seed})
+    training_env_vs_good_dqn = rlcard.make('nano_ofcp', config={'seed': random_seed})
+
     # heuristic_agent_env = rlcard.make('nano_ofcp', config={'seed': random_seed})
     eval_env_vs_random = rlcard.make('nano_ofcp', config={'seed': random_seed})
 
@@ -52,8 +57,10 @@ def training_run(agent_kwargs, log_dir, save_dir, evaluate_every, evaluate_num, 
     # one for one player.
     early_dqn_agent = DQNAgentNeg(**updated_agent_kwargs)
     mid_dqn_agent = DQNAgentNeg(**updated_agent_kwargs)
+    good_dqn_agent = DQNAgentNeg(**updated_agent_kwargs)
     
     training_env_vs_random.set_agents([main_dqn_agent, random_agent])
+    trainable_environments.append(training_env_vs_random)
     eval_env_vs_random.set_agents([main_dqn_agent, random_agent])
     # The final enviroment is filled once we have our agent.
 
@@ -62,6 +69,7 @@ def training_run(agent_kwargs, log_dir, save_dir, evaluate_every, evaluate_num, 
     logger_vs_random = Logger(log_dir, csv_name="dqn_league_learning_random.csv")
     logger_vs_early = Logger(log_dir, csv_name="dqn_league_learning_early.csv")
     logger_vs_mid = Logger(log_dir, csv_name="dqn_league_learning_mid.csv")
+    logger_vs_good = Logger(log_dir, csv_name="dqn_league_learning_good.csv")
 
     # Display infomation about the agents networks.
     # print("Agents network shape: {}".format(agent.q_estimator.qnet))
@@ -103,6 +111,7 @@ def training_run(agent_kwargs, log_dir, save_dir, evaluate_every, evaluate_num, 
             checkpoint = torch.load(os.path.join(save_dir, 'early_dqn_model.pth'))
             early_dqn_agent.load(checkpoint)
             training_env_vs_early_dqn.set_agents([main_dqn_agent, early_dqn_agent])
+            trainable_environments.append(training_env_vs_early_dqn)
         if episode == int(0.9 * early_finish):
             print(f"\nSaving for the mid DQN agent. Ep Number: {episode}")
             state_dict = main_dqn_agent.get_state_dict()
@@ -111,20 +120,33 @@ def training_run(agent_kwargs, log_dir, save_dir, evaluate_every, evaluate_num, 
             checkpoint = torch.load(os.path.join(save_dir, 'mid_dqn_model.pth'))
             mid_dqn_agent.load(checkpoint)
             training_env_vs_mid_dqn.set_agents([main_dqn_agent, mid_dqn_agent])
+            trainable_environments.append(training_env_vs_mid_dqn)
+        if episode == int(0.9 * mid_finish):
+            print(f"\nSaving for the good DQN agent. Ep Number: {episode}")
+            state_dict = main_dqn_agent.get_state_dict()
+            torch.save(state_dict, os.path.join(save_dir, 'good_dqn_model.pth'))
+            # Load this into our agent.
+            checkpoint = torch.load(os.path.join(save_dir, 'good_dqn_model.pth'))
+            good_dqn_agent.load(checkpoint)
+            training_env_vs_good_dqn.set_agents([main_dqn_agent, good_dqn_agent])
+            trainable_environments.append(training_env_vs_good_dqn)
 
         # Depending on how far we are into the game, we either play against a random agent, or 
         # against a weaker version of our agent, which will have been filled from after 5000 epoches.
-        if episode < random_finish:
-            # Generate data from the environment
-            trajectories, _ = training_env_vs_random.run(is_training=True)
-        elif episode < early_finish:
-            trajectories, _ = training_env_vs_early_dqn.run(is_training=True)
-        elif episode < mid_finish:
-            trajectories, _ = training_env_vs_mid_dqn.run(is_training=True)
-        else:
-            # TODO: Figure out what to do here.
-            trajectories, _ = training_env_vs_mid_dqn.run(is_training=True)
+        # if episode < random_finish:
+        #     # Generate data from the environment
+        #     trajectories, _ = training_env_vs_random.run(is_training=True)
+        # elif episode < early_finish:
+        #     trajectories, _ = training_env_vs_early_dqn.run(is_training=True)
+        # elif episode < mid_finish:
+        #     trajectories, _ = training_env_vs_mid_dqn.run(is_training=True)
+        # else:
+        #     # TODO: Figure out what to do here.
+        #     trajectories, _ = training_env_vs_mid_dqn.run(is_training=True)
 
+        # Sample an enviroment to train from.
+        env_to_sample = random.choice(trainable_environments)
+        trajectories, _ = env_to_sample.run(is_training=True)
 
         # Feed transitions into agent memory, and train the agent
         # TODO: Could just feed in from several targets.
@@ -152,17 +174,23 @@ def training_run(agent_kwargs, log_dir, save_dir, evaluate_every, evaluate_num, 
                 print("\nScore vs Mid Agent")
                 tour_score_vs_mid = tournament(training_env_vs_mid_dqn, evaluate_num)[0]
                 logger_vs_mid.log_performance(episode - early_finish, tour_score_vs_mid)
+            if episode >= mid_finish:
+                print("\nScore vs Good Agent")
+                tour_score_vs_good = tournament(training_env_vs_good_dqn, evaluate_num)[0]
+                logger_vs_early.log_performance(episode - mid_finish, tour_score_vs_good)
             
 
     # Close files in the logger
     logger_vs_random.close_files()
     logger_vs_early.close_files()
     logger_vs_mid.close_files()
+    logger_vs_good.close_files()
 
     # Plot the learning curve
     logger_vs_random.plot('dqn_vs_randoms')
     logger_vs_early.plot('dqn_vs_early')
     logger_vs_mid.plot('dqn_vs_mid')
+    logger_vs_good.plot('dqn_vs_good')
 
     # Save model
     state_dict = main_dqn_agent.get_state_dict()
@@ -201,12 +229,13 @@ if __name__ == '__main__':
 
     run_kwargs = {
         'evaluate_every': 5000, 
-        'evaluate_num': 10000, 
-        'episode_num': 250000, 
+        'evaluate_num': 5000, 
+        'episode_num': 300000, 
         'random_seed': 0,
-        'random_finish': 75000, 
-        'early_finish': 150000, 
-        'mid_finish': 250000,
+        'random_finish': 50000, 
+        'early_finish': 100000, 
+        'mid_finish': 150000,
+        'good_finish': 200000,
         'q_value_est_sample_size': 100, # 100 at normal test time.
         'q_value_est_num_rollout': 100 # 100 at test time
     }
@@ -225,10 +254,10 @@ if __name__ == '__main__':
             'device': 'cpu',
             'replay_memory_init_size': 1000,
             'update_target_estimator_every': 2500,
-            'train_every': 1,
-            'mlp_layers': [128, 128, 64],
+            'train_every': 8,
+            'mlp_layers': [128, 128],
             'learning_rate': 0.00005,
-            'batch_size': 64,
+            'batch_size': 128,
             'epsilon_start': 0.3,
             'epsilon_end': 0.05,
             'epsilon_decay_steps': run_kwargs['episode_num'],
