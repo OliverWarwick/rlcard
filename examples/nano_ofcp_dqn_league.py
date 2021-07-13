@@ -8,7 +8,7 @@ import argparse
 import rlcard
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
-from examples.nano_ofcp_q_value_approx import eval_q_value_approx
+from nano_ofcp_q_value_approx import eval_q_value_approx
 from rlcard.agents import DQNAgentPytorchNeg as DQNAgentNeg, RandomAgent
 # from nano_ofcp_dqn_pytorch_load_model import load_dqn_agent
 
