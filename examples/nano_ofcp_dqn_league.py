@@ -222,7 +222,8 @@ if __name__ == '__main__':
         'random_seed': 0,
         'random_finish': 300, 
         'early_finish': 600, 
-        'mid_finish': 1000,
+        'mid_finish': 800,
+        'good_finish': 1000,
         'q_value_est_sample_size': 25, # 100 at normal test time.
         'q_value_est_num_rollout': 25 # 100 at test time
     }
