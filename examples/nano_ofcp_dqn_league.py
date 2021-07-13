@@ -201,12 +201,12 @@ if __name__ == '__main__':
 
     # Parsing for the arguments.
     parser = argparse.ArgumentParser(description='Type of Vis')
-    parser.add_argument('--run_local', dest='run_env_local', type=bool, default=True, help='Whether we are running in colabs or not. True / False')
+    parser.add_argument('--run_local', dest='env', type=str, default="local", help='Whether we are running in colabs or not. True / False')
     args = parser.parse_args()
 
-    print(f"args.run_env_local: {args.run_env_local}")
+    print(f"args.env: {args.env}")
 
-    if args.run_env_local:
+    if args.env == "local":
         directory = 'ow_model/experiments/nano_ofcp_dqn_league_multi_play/run0/'
         print("Using local")
     else:
