@@ -4,13 +4,13 @@ import torch
 import os
 import json 
 from copy import deepcopy
+import argparse
 import rlcard
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
 from examples.nano_ofcp_q_value_approx import eval_q_value_approx
 from rlcard.agents import DQNAgentPytorchNeg as DQNAgentNeg, RandomAgent
 # from nano_ofcp_dqn_pytorch_load_model import load_dqn_agent
-
 
 
 def training_run(agent_kwargs, log_dir, save_dir, evaluate_every, evaluate_num, episode_num, random_seed, random_finish, early_finish, mid_finish, q_value_est_sample_size, q_value_est_num_rollout):
@@ -171,8 +171,17 @@ def training_run(agent_kwargs, log_dir, save_dir, evaluate_every, evaluate_num, 
 
 if __name__ == '__main__':
 
+    # Parsing for the arguments.
+    parser = argparse.ArgumentParser(description='Type of Vis')
+    parser.add_argument('--local', dest='run_env_local', type=bool, default=True, help='Whether we are running in colabs or not. True / False')
+    args = parser.parse_args()
+
+    if args.run_env_local:
+        directory = "ow_model/experiments/nano_ofcp_dqn_league_multi_play/run0/"
+    else:
+        directory = '/content/drive/MyDrive/msc_thesis/experiments/nano_ofcp_dqn_league_multi_play/'
+
     trainable = True
-    directory = "ow_model/experiments/nano_ofcp_dqn_league_multi_play/run0/"
 
     # We need to form the log and save directory
     log_dir = directory + "logs_league"
