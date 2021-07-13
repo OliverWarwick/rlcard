@@ -7,7 +7,7 @@ import rlcard
 from rlcard.envs import Env
 from rlcard.games.nano_ofcp import Game, ActionChoiceException
 from rlcard.games.nano_ofcp.ofcp_utils import STRING_TO_RANK
-from rlcard.agents import RandomAgent, NanoOFCPPerfectInfoAgent, MonteCarloAgent
+from rlcard.agents import RandomAgent, NanoOFCPPerfectInfoAgent, MonteCarloAgent, DQNAgentEndGame
 from rlcard.utils import *
 
 DEFAULT_GAME_CONFIG = {
@@ -45,6 +45,55 @@ class NanoOFCPEnv(Env):
         super().__init__(config)
         self.actions = [['D', 'F', 'F'], ['D', 'F', 'B'], ['D', 'B', 'F'], ['D', 'B', 'B'], ['F', 'D', 'F'], ['F', 'D', 'B'], ['B', 'D', 'F'], ['B', 'D', 'B'], ['F', 'F', 'D'], ['F', 'B', 'D'], ['B', 'F', 'D'], ['B', 'B', 'D']]
         self.state_shape = 6 * 3 * 6 # Each row is 3 cards and their are 6 of these. For each of the cards we have a 6 element one hot encoding.
+
+
+
+    def end_game_agent_run(self, is_training=False):
+
+        # Need a special routine for the mc agent because it requires the env and player_id alongside the state when choosing an action.
+        trajectories = [[] for _ in range(self.player_num)]
+        state, player_id = self.reset()
+
+        trajectories[player_id].append(state)
+        while not self.is_over():
+            # print("Self game pointer: " + str(self.game.game_pointer))
+
+            # Agent plays
+            if isinstance(self.agents[player_id], DQNAgentEndGame):
+                action = self.agents[player_id].step(state, self, player_id)
+            else:
+                if not is_training:
+                    # print("Calling Random Agent Step")
+                    action, _ = self.agents[player_id].eval_step(state)
+                else:
+                    action = self.agents[player_id].step(state)
+
+            # Environment steps
+            next_state, next_player_id = self.step(action, self.agents[player_id].use_raw)
+            # Save action
+            trajectories[player_id].append(action) 
+            # Set the state and player
+            state = next_state
+            player_id = next_player_id
+
+            # Save state.
+            if not self.game.is_over():
+                trajectories[player_id].append(state)
+
+        # Add a final state to all the players
+        for player_id in range(self.player_num):
+            state = self.get_state(player_id)
+            trajectories[player_id].append(state)
+
+        # Payoffs
+        payoffs = self.get_payoffs()
+
+        # Reorganize the trajectories
+        trajectories = reorganize(trajectories, payoffs)
+
+        return trajectories, payoffs
+
+
 
 
     def mc_agent_run(self, is_training=False):

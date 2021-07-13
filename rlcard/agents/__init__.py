@@ -29,7 +29,7 @@ from rlcard.agents.nano_ofcp_perfect_info_agent import PerfectInfoAgent as NanoO
 from rlcard.agents.nano_ofcp_monte_carlo_agent import MCAgent as MonteCarloAgent
 from rlcard.agents.dqn_agent_pytorch_neg_rewards import DQNAgentNeg as DQNAgentPytorchNeg
 from rlcard.agents.dqn_agent_ucb_pytorch import DQNAgentUCB as DQNAgentPytorchUCB
-
+from rlcard.agents.dqn_end_game_agent import DQNAgentEndGame
 
 # Extra addition for components of Q Agents.
 from rlcard.agents.dqn_agent_pytorch import Memory

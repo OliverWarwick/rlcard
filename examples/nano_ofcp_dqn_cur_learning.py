@@ -2,6 +2,7 @@
 '''
 import torch
 import os
+import json 
 
 import rlcard
 from rlcard.utils import set_global_seed, tournament
@@ -9,22 +10,16 @@ from rlcard.utils import Logger
 from examples.nano_ofcp_q_value_approx import eval_q_value_approx
 from rlcard.agents import DQNAgentPytorchNeg as DQNAgentNeg, NanoOFCPPerfectInfoAgent as HeurisitcAgent, RandomAgent
 from nano_ofcp_heuristic_vs_random import heuristic_agent_tournament
+from nano_ofcp_dqn_pytorch_load_model import load_dqn_agent
 
-def training_run(evaluate_every = 1000, 
-                evaluate_num = 2500, 
-                episode_num = 100000, 
-                memory_init_size = 2500, 
-                train_every = 1, 
-                log_dir = None,
-                save_dir = None,
-                random_seed = 0):
+def training_run(agent_kwargs, agent_type, agent_path, log_dir, save_dir, evaluate_every, evaluate_num, episode_num, random_seed):
 
     # Make environment
-    env = rlcard.make('nano_ofcp', config={'seed': random_seed})
-    env_heur_025 = rlcard.make('nano_ofcp', config={'seed': random_seed})
+    # env = rlcard.make('nano_ofcp', config={'seed': random_seed})
+    # env_heur_025 = rlcard.make('nano_ofcp', config={'seed': random_seed})
     env_heur_05 = rlcard.make('nano_ofcp', config={'seed': random_seed})
-    env_heur_075 = rlcard.make('nano_ofcp', config={'seed': random_seed})
-    env_heur_1 = rlcard.make('nano_ofcp', config={'seed': random_seed})
+    # env_heur_075 = rlcard.make('nano_ofcp', config={'seed': random_seed})
+    # env_heur_1 = rlcard.make('nano_ofcp', config={'seed': random_seed})
     eval_env_random = rlcard.make('nano_ofcp', config={'seed': random_seed})
 
 
@@ -43,35 +38,20 @@ def training_run(evaluate_every = 1000,
     # Set a global seed
     set_global_seed(random_seed)
 
-    agent = DQNAgentNeg(scope='dqn',
-                    action_num=env.action_num,
-                    replay_memory_init_size=memory_init_size,
-                    train_every=train_every,
-                    state_shape=env.state_shape,
-                    mlp_layers=[64, 64],
-                    device=torch.device('cpu'),
-                    epsilon_decay_steps=episode_num,
-                    epsilon_start=0.6,
-                    epsilon_end=0.1,
-                    learning_rate=0.0001,
-                    update_target_estimator_every=evaluate_every,
-                    verbose=False, 
-                    batch_size=32,
-                    discount_factor=1.0,
-                    max_neg_reward=-2)
+    agent = load_dqn_agent(agent_kwargs, agent_type, agent_path)
 
     random_agent = RandomAgent(action_num=eval_env_random.action_num)
-    heuristic_agent_025 = HeurisitcAgent(action_num=env.action_num, use_raw=False, alpha=0.25)
-    heuristic_agent_05 = HeurisitcAgent(action_num=env.action_num, use_raw=False, alpha=0.5)
-    heuristic_agent_075 = HeurisitcAgent(action_num=env.action_num, use_raw=False, alpha=0.75)
-    heuristic_agent_1 = HeurisitcAgent(action_num=env.action_num, use_raw=False, alpha=1)
+    # heuristic_agent_025 = HeurisitcAgent(action_num=env.action_num, use_raw=False, alpha=0.25)
+    heuristic_agent_05 = HeurisitcAgent(action_num=env_heur_05.action_num, use_raw=False, alpha=0.5)
+    # heuristic_agent_075 = HeurisitcAgent(action_num=env.action_num, use_raw=False, alpha=0.75)
+    # heuristic_agent_1 = HeurisitcAgent(action_num=env.action_num, use_raw=False, alpha=1)
 
-    env.set_agents([agent, random_agent])
+    # env.set_agents([agent, random_agent])
     eval_env_random.set_agents([agent, random_agent])
-    env_heur_025.set_agents([agent, heuristic_agent_025])
+    # env_heur_025.set_agents([agent, heuristic_agent_025])
     env_heur_05.set_agents([agent, heuristic_agent_05])
-    env_heur_075.set_agents([agent, heuristic_agent_075])
-    env_heur_1.set_agents([agent, heuristic_agent_1])
+    # env_heur_075.set_agents([agent, heuristic_agent_075])
+    # env_heur_1.set_agents([agent, heuristic_agent_1])
 
 
     # Init a Logger to plot the learning curve, and use the name of the model so we can 
@@ -86,18 +66,19 @@ def training_run(evaluate_every = 1000,
 
     for episode in range(episode_num):
 
-        if episode < 40000:
-            # Generate data from the environment
-            trajectories, _ = env.run(is_training=True)
-        elif episode < 60000:
-            trajectories, _ = env_heur_025.heuristic_agent_run(is_training=True)
-        elif episode < 75000:
-            trajectories, _ = env_heur_05.heuristic_agent_run(is_training=True)
-        elif episode < 90000:
-            trajectories, _ = env_heur_075.heuristic_agent_run(is_training=True)
-        else:
-            trajectories, _ = env_heur_1.heuristic_agent_run(is_training=True)
+        # if episode < 40000:
+        #     # Generate data from the environment
+        #     trajectories, _ = env.run(is_training=True)
+        # elif episode < 60000:
+        #     trajectories, _ = env_heur_025.heuristic_agent_run(is_training=True)
+        # elif episode < 75000:
+        #     trajectories, _ = env_heur_05.heuristic_agent_run(is_training=True)
+        # elif episode < 90000:
+        #     trajectories, _ = env_heur_075.heuristic_agent_run(is_training=True)
+        # else:
+        #     trajectories, _ = env_heur_1.heuristic_agent_run(is_training=True)
 
+        trajectories, _ = env_heur_05.heuristic_agent_run(is_training=True)
 
         # Feed transitions into agent memory, and train the agent
         for ts in trajectories[0]:
@@ -129,11 +110,39 @@ def training_run(evaluate_every = 1000,
     # Once model is saved, we can then test again to see how close the q values are to those 
     # which we sample from chosen games.
     q_value_log_dir = log_dir + 'q_values_logs/'
-    mean_q_value_diffs = eval_q_value_approx(agent, random_agent, sample_size=20, num_rollouts=100, log_dir=q_value_log_dir)
+    mean_q_value_diffs = eval_q_value_approx(agent, random_agent, sample_size=100, num_rollouts=100, log_dir=q_value_log_dir)
 
 
 
 if __name__ == '__main__':
-    for i in range(1,2):
-        training_run(log_dir = f".ow_model/experiments/nano_ofcp_dqn_curr_learning/run{i}/logs/", 
-        save_dir = f".ow_model/experiments/nano_ofcp_dqn_curr_learning/run{i}/model/", random_seed=i*100)
+
+    trainable = True
+    directory = "ow_model/experiments/nano_ofcp_dqn_neg_reg/run0/"
+
+    # We need to form the log and save directory
+    log_dir = directory + "logs_cycle_curr"
+    save_dir = directory + "model_cycle_curr"
+
+    run_kwargs = {
+        'evaluate_every': 5000, 
+        'evaluate_num': 5000, 
+        'episode_num': 100000, 
+        'random_seed': 0
+    }
+    
+    agent_path = directory + "model/model.pth"
+    agent_type = "DQN_NEG"
+
+    json_kwargs_path = directory + "model/agent_kwargs.json"
+    json_file = open(json_kwargs_path, "r")
+    agent_kwargs = json.load(json_file)
+
+    greedy_parameters = {
+        'epsilon_start': 0.25,
+        'epsilon_end': 0.1,
+        'epsilon_decay_steps': run_kwargs['episode_num'],
+    }
+
+    agent_kwargs.update(greedy_parameters)
+    
+    training_run(agent_kwargs, agent_type, agent_path, log_dir, save_dir, **run_kwargs)

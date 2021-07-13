@@ -34,17 +34,14 @@ with tf.Session() as sess:
     global_step = tf.Variable(0, name='global_step', trainable=False)
 
     # Set up the agents
-    agents = []
-    for i in range(env.player_num):
-        agent = DeepCFR(sess, scope='deepcfr'+str(i), 
-                        env=env,
-                        num_traversals=5,
-                        num_step=5)
-        agents.append(agent)
+    agent = DeepCFR(sess, scope='deepcfr', 
+                    env=env,
+                    num_traversals=1,
+                    num_step=1)
     random_agent = RandomAgent(action_num=eval_env.action_num)
 
-    env.set_agents(agents)
-    eval_env.set_agents([agents[0], random_agent])
+    env.set_agents([agent, random_agent])
+    eval_env.set_agents([agent, random_agent])
 
     # Initialize global variables
     sess.run(tf.global_variables_initializer())
@@ -53,8 +50,7 @@ with tf.Session() as sess:
     logger = Logger(log_dir)
 
     for episode in range(episode_num):
-        for agent in agents:
-            agent.train()
+        agent.train()
 
         # Evaluate the performance. Play with random agents.
         if episode % evaluate_every == 0:

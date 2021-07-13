@@ -13,10 +13,10 @@ env = rlcard.make('leduc-holdem', config={'seed': 0, 'allow_step_back':True})
 eval_env = rlcard.make('leduc-holdem', config={'seed': 0})
 
 # Set the iterations numbers and how frequently we evaluate the performance and save model
-evaluate_every = 100
-save_plot_every = 1000
-evaluate_num = 10000
-episode_num = 10000
+evaluate_every = 1
+save_plot_every = 1
+evaluate_num = 1000
+episode_num = 5
 
 # The paths for saving the logs and learning curves
 log_dir = './experiments/leduc_holdem_cfr_result/'

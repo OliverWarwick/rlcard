@@ -71,7 +71,7 @@ def training_run(log_dir,
 
             logger.log_performance(env.timestep, tournament(eval_env, evaluate_num)[0])
 
-        if episode in [0, 10, 100, 500, 1000, 2500, 5000, 10000, 25000]:
+        if episode in [0, 10, 100, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 150000, 200000]:
             print("\nSummary Stats on Map:")
             print("Size in bytes: {}".format(sys.getsizeof(agent.count_map)))
             print("MByes: {}".format(sys.getsizeof(agent.count_map) / 1024))
@@ -111,9 +111,9 @@ if __name__ == '__main__':
     for i in range(0,1):
 
         run_kwargs = {
-            'evaluate_every': 2500, 
+            'evaluate_every': 5000, 
             'evaluate_num': 5000, 
-            'episode_num': 10000, 
+            'episode_num': 100000, 
             'random_seed': i
         }
 
@@ -125,22 +125,22 @@ if __name__ == '__main__':
             'replay_memory_init_size': 1000,
             'update_target_estimator_every': 2500,
             'train_every': 1,
-            'mlp_layers': [128, 128],
+            'mlp_layers': [128, 64, 64],
             'learning_rate': 0.00005,
             'batch_size': 64,
-            'epsilon_start': 1.0,
-            'epsilon_end': 0.1,
+            'epsilon_start': 0.5,
+            'epsilon_end': 0.05,
             'epsilon_decay_steps': run_kwargs['episode_num'],
             'discount_factor': 1.0,
             'verbose': False,
             'optimisitic_bias_on_action': 4,
             'optimisitic_bias_on_bootstrap': 4,
-            'optimism_decay': 0.5
+            'optimism_decay': 1
         }
 
         l = training_run(
-            log_dir=f"ow_model/experiments/nano_ofcp_dqn_ucb_exp_long_run/run{i}/logs/",
-            save_dir=f"ow_model/experiments/nano_ofcp_dqn_ucb_exp_long_run/run{i}/model/",
+            log_dir=f"ow_model/experiments/nano_ofcp_dqn_ucb_exp_very_long_run_1/run{i}/logs/",
+            save_dir=f"ow_model/experiments/nano_ofcp_dqn_ucb_exp_very_long_run_1/run{i}/model/",
             q_agent_kwargs=agent_kwargs,
             **run_kwargs
         )

@@ -39,7 +39,7 @@ def eval_q_value_approx(agent_1, agent_2, sample_size, num_rollouts, log_dir=Non
     # Create a logger
     if log_dir is None:
         log_dir = '.ow_model/experiments/nano_ofcp_dqn_q_approx/'
-    logger = Logger(log_dir, fieldnames=['decision point', 'q value difference'], csv_name='q_values_diffs_v2.csv')
+    logger = Logger(log_dir, fieldnames=['decision point', 'q value difference'], csv_name='q_values_diffs.csv')
 
     # Need to set the global seed in order for this to be the same experiment each time.
     set_global_seed(0)

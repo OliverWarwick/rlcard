@@ -156,15 +156,16 @@ class DQNAgentNeg(DQNAgent):
             done = True     # To ensure no value given for discounted terms.
             self.memory.save(current_state, potential_action_based_on_q_value, reward, next_state, done)
 
-            if(self.total_t % 250 == 0):
-                count_of_bad_transitions = 0           
-                for mem in self.memory.memory:
-                    if np.array_equal(mem[3], np.zeros(self.state_shape)):
-                        count_of_bad_transitions += 1
-                # print("Mems with neg reward because of bad transition")
-                
-                prop_bad = round(100 * count_of_bad_transitions /  len(self.memory.memory), 5)
-                print(f"Prop of bad transitions: {prop_bad}")
+            # if(self.total_t % 250 == 0):
+            #     count_of_bad_transitions = 0           
+            #     for mem in self.memory.memory:
+            #         if np.array_equal(mem[3], np.zeros(self.state_shape)):
+            #             count_of_bad_transitions += 1
+                    
+            #     # print("Mems with neg reward because of bad transition")
+            #     print(count_of_bad_transitions)
+            #     prop_bad = round(100 * count_of_bad_transitions /  len(self.memory.memory), 5)
+            #     print(f"Prop of bad transitions: {prop_bad}")
 
         # Then we carry on as usual to remove the illegal move to allow play to roll forward as expected.
         A = remove_illegal(A, state['legal_actions'])

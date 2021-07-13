@@ -12,7 +12,8 @@ from rlcard.utils import Logger
 from examples.nano_ofcp_q_value_approx import eval_q_value_approx
 
 
-def training_run(log_dir, 
+def training_run(rl_checkpoint, 
+    log_dir, 
     save_dir, 
     agent_kwargs, 
     evaluate_every,
@@ -53,6 +54,10 @@ def training_run(log_dir,
     agents = []
     for _ in range(env.player_num):
         agent = NFSPAgent(**agent_kwargs)
+        # Here we then set up the RL agent for each of the agents.
+        checkpoint = torch.load(rl_checkpoint)
+        agent._rl_agent.q_estimator.qnet.load_state_dict(checkpoint['dqn_q_estimator']) 
+        agent._rl_agent.target_estimator.qnet.load_state_dict(checkpoint['dqn_target_estimator'])
         agents.append(agent)
     random_agent = RandomAgent(action_num=eval_env_0.action_num)
 
@@ -163,14 +168,14 @@ if __name__ == '__main__':
             'scope':'nfsp' + str(i),
             'state_shape': 108,
             'action_num': 12,
-            'hidden_layers_sizes': [64, 64],
+            'hidden_layers_sizes': [128, 128, 64],
             'anticipatory_param': 0.2,
             'train_every': 4,
             'min_buffer_size_to_learn': 1000,
             'q_replay_memory_init_size': 1000,
             'sl_learning_rate': 0.00005,
             'q_train_every': 1,
-            'q_mlp_layers': [64, 64],
+            'q_mlp_layers': [128, 128, 64],
             'q_discount_factor': 1.0,
             'q_epsilon_start': 0.5,
             'q_epsilon_end': 0.05,
@@ -183,6 +188,7 @@ if __name__ == '__main__':
 
 
         training_run(
+            rl_checkpoint=f"ow_model/experiments/nano_ofcp_dqn_neg_reg/run{i}/model/model.pth",
             log_dir=f"ow_model/experiments/nano_ofcp_nfsp_attempt/run{i}/logs/", 
             save_dir=f"ow_model/experiments/nano_ofcp_nfsp_attempt/run{i}/model/",
             agent_kwargs=nfsp_kwargs,

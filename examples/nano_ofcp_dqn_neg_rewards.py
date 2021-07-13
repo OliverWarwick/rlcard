@@ -49,7 +49,7 @@ def training_run(log_dir,
     for episode in range(episode_num):
 
         # Generate data from the environment
-        trajectories, _ = env.run(is_training=True)
+        trajectories, _ = env.end_game_agent_run(is_training=True)
 
         # Feed transitions into agent memory, and train the agent
         for ts in trajectories[0]:
