@@ -10,7 +10,7 @@ from rlcard.agents import DQNAgentEndGame
 from rlcard.agents import RandomAgent
 from rlcard.utils import set_global_seed, tournament
 from rlcard.utils import Logger
-from examples.nano_ofcp_q_value_approx import eval_q_value_approx
+from nano_ofcp_q_value_approx import eval_q_value_approx
 
 def training_run(log_dir, 
     save_dir, 
